@@ -36,3 +36,23 @@ plot(e)
 plot(f)
 plot(g)
 polygon(g)
+
+# Vary side length
+for (r in sample(c(1:10))) {
+  h <- generate_polygon(r = r, N = 3)
+  plot(h)
+  polygon(h)
+}
+
+# Vary rotation
+for (theta in sample(seq(from = 30, to = 360, by = 30))) {
+  h <- generate_polygon(N = 3, theta = theta)
+  plot(h)
+  polygon(h)
+}
+
+# Vary inner angles
+for (n in sample(c(1:10))) {
+  h <- generate_polygon(n = n, N = 3)
+  polygon(h)
+}
