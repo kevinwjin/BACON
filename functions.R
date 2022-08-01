@@ -4,7 +4,7 @@
 #' Generate a random polygonal chain
 #' 
 #' @description Randomly generates the vertices of a polygonal chain by drawing 
-#' from a uniform distribution.
+#' from a uniform distribution, sorting vertices by angle sweep from the x-axis.
 #' 
 #' @param k Number of vertices to generate.
 #' @param min Minimum parameter for the uniform distribution.
@@ -17,6 +17,39 @@ generate <- function(k = 3, min = 0, max = 1) {
   colnames(chain) <- c("x", "y")
   chain[, "x"] <- sort(runif(k, min = min, max = max)) # In increasing order
   chain[, "y"] <- sort(runif(k, min = min, max = max))
+  
+  centroid <- rowSums(t(chain))/nrow(chain) # Compute centroid
+  chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE) # Convert Cartesian to polar
+  colnames(chain_p) <- c("r", "t")
+  for (n in 1:nrow(chain)) {
+    dist <- chain[n, ] - centroid # Draw vector between points and centroid
+    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2)
+    t <- atan2(dist[2], dist[1]) * (180 / pi)
+    chain_p[n, "r"] <- r
+    chain_p[n, "t"] <- t
+  }
+  chain <- chain[order(chain_p[, "t"]), ] # Sort vertices by increasing angle sweep from x-axis
+  return(chain)
+}
+
+#' Randomize a polygonal chain
+#' 
+#' @description Randomizes the vertices or angles of a polygonal chain.
+#' 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' of the polygonal chain.
+#' @param random String containing polygon parameter to randomize.
+#' 
+#' @return A 2 x k matrix containing the x-y coordinates of the vertices of the 
+#' polygonal chain.
+randomize <- function(chain, random = c("vertices, angles")) {
+  if (random == "vertices") {
+    chain <- jitter(chain, factor = 10)
+  } else if (random == "angles") {
+    warning("Angle variation not implemented yet.")
+  } else {
+    warning("Invalid parameter.")
+  }
   return(chain)
 }
 
@@ -57,7 +90,7 @@ scale <- function(chain, factor = 1) {
   } else if (factor > 0) {
     chain <- chain * factor
   } else {
-    cat("Error: Cannot scale chain by zero.\n")
+    warning("Cannot scale chain by zero.")
   }
   return(chain)
 }
@@ -80,7 +113,7 @@ flip <- function(chain, direction = c("horizontal", "vertical")) {
   } else if (direction == "vertical") {
     chain <- triangle %*% matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) # Flip across the x-axis
   } else {
-    cat("Invalid direction.\n")
+    warning("Invalid direction.")
   }
   return(chain)
 }
