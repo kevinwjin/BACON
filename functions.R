@@ -46,9 +46,9 @@ randomize <- function(chain, random = c("vertices, angles")) {
   if (random == "vertices") {
     chain <- jitter(chain, factor = 10)
   } else if (random == "angles") {
-    warning("Angle variation not implemented yet.")
+    stop("Angle variation not implemented yet.")
   } else {
-    warning("Invalid parameter.")
+    stop("Invalid or no randomization argument provided.")
   }
   return(chain)
 }
@@ -72,25 +72,23 @@ translate <- function(chain, x = 0, y = 0) {
   return(chain)
 }
 
-#' Scale a polygonal chain
+#' Dilate a polygonal chain
 #' 
 #' @description 
-#' Scales the size of a polygonal chain to be greater or smaller around its
-#' centroid.
+#' Scales the size of a polygonal chain to be greater or smaller.
 #' 
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
 #' @param factor Positive or negative integer to scale the chain by.
 #' 
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
-#' the scaled chain.
-scale <- function(chain, factor = 1) {
-  if (factor < 0) {
-    chain <- chain * (1 / -factor)
-  } else if (factor > 0) {
-    chain <- chain * factor
+#' the dilated chain.
+dilate <- function(chain, factor = 1) {
+  if (factor == 0) {
+    stop("Cannot dilate chain by zero.\n")
   } else {
-    warning("Cannot scale chain by zero.")
+    dilation <- matrix(c(factor, 0, 0, factor), nrow = 2, ncol = 2, byrow = TRUE)
+    chain <- chain %*% dilation
   }
   return(chain)
 }
@@ -109,11 +107,11 @@ scale <- function(chain, factor = 1) {
 #' 
 flip <- function(chain, direction = c("horizontal", "vertical")) {
   if (direction == "horizontal") {
-    chain <- triangle %*% matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) # Flip across the y-axis
+    chain <- chain %*% matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) # Flip across the y-axis
   } else if (direction == "vertical") {
-    chain <- triangle %*% matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) # Flip across the x-axis
+    chain <- chain %*% matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) # Flip across the x-axis
   } else {
-    warning("Invalid direction.")
+    stop("Invalid or no direction provided.\n")
   }
   return(chain)
 }

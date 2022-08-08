@@ -8,7 +8,7 @@ source("~/Documents/bsclust/functions.R")
 # Create empty canvas and test functions
 plot.new()
 
-triangle <- generate()
+pentagon <- generate(k = 5)
 
-plot(triangle, xlim = c(-2, 2), ylim = c(-2, 2))
-polygon(triangle)
+plot(pentagon, xlim = c(-2, 2), ylim = c(-2, 2))
+polygon(pentagon)
