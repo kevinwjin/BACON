@@ -15,8 +15,8 @@
 generate <- function(k = 3, min = 0, max = 1) {
   chain <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain) <- c("x", "y")
-  chain[, "x"] <- sort(runif(k, min = min, max = max)) # In increasing order
-  chain[, "y"] <- sort(runif(k, min = min, max = max))
+  chain[, "x"] <- runif(k, min = min, max = max) # In increasing order
+  chain[, "y"] <- runif(k, min = min, max = max)
   
   centroid <- rowSums(t(chain))/nrow(chain) # Compute centroid
   chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE) # Convert Cartesian to polar
