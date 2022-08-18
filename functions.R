@@ -39,14 +39,30 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
 #' @param random String containing polygon parameter to randomize.
+#' @param factor Floating point number from 0 to 1 exclusive as a percentage
+#' of the perimeter of the polygonal chain to randomize by.
 #' 
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of the 
 #' polygonal chain.
-randomize <- function(chain, random = c("vertices, angles")) {
+jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
   if (random == "vertices") {
-    chain <- jitter(chain, factor = 10)
+    for (n in 1:nrow(chain)) { # For each vertex...
+      # Choose a random point in a radius of uncertainty around the vertex
+      perimeter <- 1 # Placeholder; use Euclidean distance
+      radius <- perimeter * factor
+      r <- radius * sqrt(runif(1))
+      theta <- runif(1) * 2 * pi
+      
+      # Convert to Cartesian
+      chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
+      chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
+      
+      # Check if the chain is valid after jittering (call separate function)
+      # Order of the vertices must remain the same and might be disturbed after jitter
+      # Re-jitter if the chain if invalid (set maximum # loops for while loop and warn to shrink factor if unsuccessful)
+    }
   } else if (random == "angles") {
-    stop("Angle variation not implemented yet.")
+    stop("Not implemented yet.")
   } else {
     stop("Invalid or no randomization argument provided.")
   }
@@ -75,20 +91,22 @@ translate <- function(chain, x = 0, y = 0) {
 #' Dilate a polygonal chain
 #' 
 #' @description 
-#' Scales the size of a polygonal chain to be greater or smaller.
+#' Scales the size of a polygonal chain to be greater or smaller around its 
+#' centroid.
 #' 
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
-#' @param factor Positive or negative integer to scale the chain by.
+#' @param factor Positive floating-point number to scale the chain by. 
+#' A factor > 1 dilates the chain, while a factor > 0 and < 1 shrinks the chain.
 #' 
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
 #' the dilated chain.
 dilate <- function(chain, factor = 1) {
-  if (factor == 0) {
-    stop("Cannot dilate chain by zero.\n")
+  if (factor <= 0) {
+    stop("Dilation factor must be greater than 0.\n")
   } else {
-    dilation <- matrix(c(factor, 0, 0, factor), nrow = 2, ncol = 2, byrow = TRUE)
-    chain <- chain %*% dilation
+    centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))]) # Create centroid matrix
+    chain <- (chain - centroid) * factor + centroid
   }
   return(chain)
 }
@@ -106,10 +124,13 @@ dilate <- function(chain, factor = 1) {
 #' the flipped chain.
 #' 
 flip <- function(chain, direction = c("horizontal", "vertical")) {
+  centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))])
   if (direction == "horizontal") {
-    chain <- chain %*% matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) # Flip across the y-axis
+    chain <- (chain - centroid) %*% 
+      matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid # Flip across the y-axis
   } else if (direction == "vertical") {
-    chain <- chain %*% matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) # Flip across the x-axis
+    chain <- (chain - centroid) %*% 
+      matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid # Flip across the x-axis
   } else {
     stop("Invalid or no direction provided.\n")
   }
@@ -131,7 +152,7 @@ flip <- function(chain, direction = c("horizontal", "vertical")) {
 #' 
 rotate <- function(chain, angle, clockwise = TRUE) {
   angle <- angle * (pi / 180) # Convert angle to radians
-  centroid <- matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = 3)] # Create centroid matrix
+  centroid <- matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))]
   if (clockwise) {
     rotation <- matrix(c(cos(angle), -sin(angle), 
                          sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
@@ -139,7 +160,7 @@ rotate <- function(chain, angle, clockwise = TRUE) {
   } else {
     rotation <- matrix(c(cos(angle), sin(angle), 
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    chain <- rotation %*% (t(chain) - centroid) + centroid
+    chain <- (t(chain) - centroid) %*% rotation + centroid
   }
   return(t(chain)) # Transpose back to original form
 }
