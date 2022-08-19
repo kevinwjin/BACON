@@ -1,4 +1,4 @@
-# Functions for polygonal chain generation
+# Probabilistic polygonal chain generation and manipulation
 # Author: Kevin Jin
 
 #' Generate a random polygonal chain

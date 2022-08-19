@@ -5,7 +5,7 @@
 set.seed(13579)
 source("~/Documents/bsclust/functions.R")
 
-# Test functions
+# Test shape generation
 shape <- generate(k = 3)
 
 plot(shape, xlim = c(-2, 2), ylim = c(-2, 2))
@@ -32,7 +32,7 @@ polygon(jitter(shape, random = c("vertices"), factor = 0.4))
 
 polygon(jitter(shape, random = c("angles")))
 
-# Probabilistic triangle generation
+# Probabilistic triangle generation via multinomially distributed angle vectors
 sides <- 3
 probs <- c(1/3, 1/3, 1/3)
 triangles <- rmultinom(n = 100, # Number of polygons
@@ -41,3 +41,7 @@ triangles <- rmultinom(n = 100, # Number of polygons
 t(triangles)
 
 dmultinom(c(29, 61, 90), size = (sides - 2) * 180, prob = probs)
+
+# Test Rcpp functions
+library(Rcpp)
+sourceCpp("code/bsclust.cpp")
