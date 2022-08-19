@@ -23,8 +23,8 @@ generate <- function(k = 3, min = 0, max = 1) {
   colnames(chain_p) <- c("r", "t")
   for (n in 1:nrow(chain)) {
     dist <- chain[n, ] - centroid # Draw vector between points and centroid
-    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2)
-    t <- atan2(dist[2], dist[1]) * (180 / pi)
+    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2) # Euclidean distance between the points
+    t <- atan2(dist[2], dist[1]) * (180 / pi) # Angle sweep from x-axis
     chain_p[n, "r"] <- r
     chain_p[n, "t"] <- t
   }
@@ -48,7 +48,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
   if (random == "vertices") {
     for (n in 1:nrow(chain)) { # For each vertex...
       # Choose a random point in a radius of uncertainty around the vertex
-      perimeter <- 1 # Placeholder; use Euclidean distance
+      perimeter <- 1 # Placeholder; use Euclidean distance between each vertex
       radius <- perimeter * factor
       r <- radius * sqrt(runif(1))
       theta <- runif(1) * 2 * pi
@@ -67,6 +67,35 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
     stop("Invalid or no randomization argument provided.")
   }
   return(chain)
+}
+
+#' Validate and calculate the internal angles of a polygonal chain
+#' 
+#' @description 
+#' Determines if the given chain of coordinates is a polygonal chain or not. If
+#' yes, return a vector of the internal angles of the polygonal chain.
+#' 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' of the polygonal chain.
+#' 
+#' @return If argument is a polygonal chain, return a vector of length k 
+#' containing the internal angles of the vertices of the polygonal chain; else
+#' return FALSE.
+validate <- function(chain) {
+  # Polygonal chain validation
+  is_chain <- FALSE
+  
+  if (is_chain) {
+    # Internal angle calculation
+    # for (n in 1:nrow(chain)) {
+    #   Angle[i] <- Pi + ArcTan2(V[i] x V[i+1], V[i] * V[i+1]) 
+    # }
+    result <- c(30, 60, 90) # Placeholder
+  } else {
+    result <- FALSE
+  }
+  
+  return(result)
 }
 
 #' Translate a polygonal chain
