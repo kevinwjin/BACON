@@ -3,8 +3,8 @@
 
 #' Generate a random polygonal chain
 #' 
-#' @description Randomly generates the vertices of a polygonal chain by drawing 
-#' from a uniform distribution, sorting vertices by angle sweep from the x-axis.
+#' @description Uniformly generates the vertices of a polygonal chain, sorting 
+#' the vertices by angle sweep from the x-axis.
 #' 
 #' @param k Number of vertices to generate.
 #' @param min Minimum parameter for the uniform distribution.
@@ -15,57 +15,26 @@
 generate <- function(k = 3, min = 0, max = 1) {
   chain <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain) <- c("x", "y")
-  chain[, "x"] <- runif(k, min = min, max = max) # In increasing order
+  chain[, "x"] <- runif(k, min = min, max = max)
   chain[, "y"] <- runif(k, min = min, max = max)
   
-  centroid <- rowSums(t(chain))/nrow(chain) # Compute centroid
-  chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE) # Convert Cartesian to polar
+  # Compute the centroid of the chain
+  centroid <- rowSums(t(chain))/nrow(chain)
+  # Convert Cartesian to polar coordinates for easier handling of angles
+  chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain_p) <- c("r", "t")
   for (n in 1:nrow(chain)) {
-    dist <- chain[n, ] - centroid # Draw vector between points and centroid
-    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2) # Euclidean distance between the points
-    t <- atan2(dist[2], dist[1]) * (180 / pi) # Angle sweep from x-axis
+    # Draw the vector between the current point and the centroid
+    dist <- chain[n, ] - centroid
+    # Take the Euclidean distance between the points
+    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2)
+    # Calculate angle sweep from the x-axis
+    t <- atan2(dist[2], dist[1]) * (180 / pi)
     chain_p[n, "r"] <- r
     chain_p[n, "t"] <- t
   }
-  chain <- chain[order(chain_p[, "t"]), ] # Sort vertices by increasing angle sweep from x-axis
-  return(chain)
-}
-
-#' Randomize a polygonal chain
-#' 
-#' @description Randomizes the vertices or angles of a polygonal chain.
-#' 
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
-#' of the polygonal chain.
-#' @param random String containing polygon parameter to randomize.
-#' @param factor Floating point number from 0 to 1 exclusive as a percentage
-#' of the perimeter of the polygonal chain to randomize by.
-#' 
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of the 
-#' polygonal chain.
-jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
-  if (random == "vertices") {
-    for (n in 1:nrow(chain)) { # For each vertex...
-      # Choose a random point in a radius of uncertainty around the vertex
-      perimeter <- 1 # Placeholder; use Euclidean distance between each vertex
-      radius <- perimeter * factor
-      r <- radius * sqrt(runif(1))
-      theta <- runif(1) * 2 * pi
-      
-      # Convert to Cartesian
-      chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
-      chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
-      
-      # Check if the chain is valid after jittering (call separate function)
-      # Order of the vertices must remain the same and might be disturbed after jitter
-      # Re-jitter if the chain if invalid (set maximum # loops for while loop and warn to shrink factor if unsuccessful)
-    }
-  } else if (random == "angles") {
-    stop("Not implemented yet.")
-  } else {
-    stop("Invalid or no randomization argument provided.")
-  }
+  # Sort vertices by increasing angle sweep from x-axis
+  chain <- chain[order(chain_p[, "t"]), ]
   return(chain)
 }
 
@@ -84,7 +53,6 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
 validate <- function(chain) {
   # Polygonal chain validation
   is_chain <- FALSE
-  
   if (is_chain) {
     # Internal angle calculation
     # for (n in 1:nrow(chain)) {
@@ -94,8 +62,57 @@ validate <- function(chain) {
   } else {
     result <- FALSE
   }
-  
   return(result)
+}
+
+#' Add jitter to a polygonal chain
+#' 
+#' @description Randomizes the vertices or angles of a polygonal chain.
+#' 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' of the polygonal chain.
+#' @param random String containing polygon parameter to randomize.
+#' @param factor Floating point number from 0 to 1 exclusive as a percentage
+#' of the perimeter of the polygonal chain to randomize by.
+#' 
+#' @return A 2 x k matrix containing the x-y coordinates of the vertices of the 
+#' polygonal chain.
+jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
+  if (random == "vertices") {
+    loops = 0 # Jitter loop counter
+    max_loops = 10 # Maximum jitter loops
+    repeat {
+      # Calculate the perimeter of the whole chain;
+      # use the Euclidean distance between each vertex
+      perimeter <- 1 
+      
+      for (n in 1:nrow(chain)) {
+        # Choose a random point in a radius of uncertainty around the vertex
+        radius <- perimeter * factor
+        r <- radius * sqrt(runif(1))
+        theta <- runif(1) * 2 * pi
+        
+        # Convert polar to Cartesian coordinates for easier plotting
+        chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
+        chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
+      }
+      
+      # Order of the vertices must remain the same and might be disturbed after jitter
+      if (validate(chain) == TRUE | loops == max_loops) {
+        if (loops == max_loops) {
+          warning("Output is not a valid polygonal chain. Please decrease the jitter factor.")
+        }
+        break
+      } else {
+        loops <- loops + 1
+      }
+    }
+  } else if (random == "angles") {
+    stop("Not implemented yet.")
+  } else {
+    stop("Invalid or no randomization argument provided.")
+  }
+  return(chain)
 }
 
 #' Translate a polygonal chain
@@ -112,16 +129,18 @@ validate <- function(chain) {
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
 #' the translated chain.
 translate <- function(chain, x = 0, y = 0) {
-  chain[, "x"] <- chain[, "x"] + x # Horizontal
-  chain[, "y"] <- chain[, "y"] + y # Vertical
+  # Horizontal translation
+  chain[, "x"] <- chain[, "x"] + x
+  # Vertical translation
+  chain[, "y"] <- chain[, "y"] + y
   return(chain)
 }
 
 #' Dilate a polygonal chain
 #' 
 #' @description 
-#' Scales the size of a polygonal chain to be greater or smaller around its 
-#' centroid.
+#' Scales the size of a polygonal chain to be greater or smaller, centered 
+#' about its centroid.
 #' 
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
@@ -134,7 +153,8 @@ dilate <- function(chain, factor = 1) {
   if (factor <= 0) {
     stop("Dilation factor must be greater than 0.\n")
   } else {
-    centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))]) # Create centroid matrix
+    # Calculate the centroid vector
+    centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))])
     chain <- (chain - centroid) * factor + centroid
   }
   return(chain)
@@ -143,7 +163,7 @@ dilate <- function(chain, factor = 1) {
 #' Flip a polygonal chain
 #' 
 #' @description 
-#' Flips the polygonal chain vertically or horizontally.
+#' Inverts a polygonal chain vertically or horizontally.
 #' 
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
@@ -155,11 +175,13 @@ dilate <- function(chain, factor = 1) {
 flip <- function(chain, direction = c("horizontal", "vertical")) {
   centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))])
   if (direction == "horizontal") {
+    # Flip across the y-axis
     chain <- (chain - centroid) %*% 
-      matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid # Flip across the y-axis
+      matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid
   } else if (direction == "vertical") {
+    # Flip across the x-axis
     chain <- (chain - centroid) %*% 
-      matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid # Flip across the x-axis
+      matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid
   } else {
     stop("Invalid or no direction provided.\n")
   }
@@ -180,7 +202,9 @@ flip <- function(chain, direction = c("horizontal", "vertical")) {
 #' the rotated chain.
 #' 
 rotate <- function(chain, angle, clockwise = TRUE) {
-  angle <- angle * (pi / 180) # Convert angle to radians
+  # Convert argument to radians, as R's trigonometric functions use radians
+  angle <- angle * (pi / 180)
+  # Calculate centroid vector
   centroid <- matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))]
   if (clockwise) {
     rotation <- matrix(c(cos(angle), -sin(angle), 
@@ -191,5 +215,6 @@ rotate <- function(chain, angle, clockwise = TRUE) {
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
     chain <- (t(chain) - centroid) %*% rotation + centroid
   }
-  return(t(chain)) # Transpose back to original form
+  # Transpose chain to original form
+  return(t(chain))
 }

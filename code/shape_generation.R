@@ -32,7 +32,7 @@ polygon(jitter(shape, random = c("vertices"), factor = 0.4))
 
 polygon(jitter(shape, random = c("angles")))
 
-# Probabilistic triangle generation via multinomially distributed angle vectors
+# Probabilistic triangle generation from parameters (multinomial angle vectors)
 sides <- 3
 probs <- c(1/3, 1/3, 1/3)
 triangles <- rmultinom(n = 100, # Number of polygons
