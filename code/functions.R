@@ -77,14 +77,20 @@ validate <- function(chain) {
 #' 
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of the 
 #' polygonal chain.
-jitter <- function(chain, random = c("vertices", "angles"), factor = 0.1) {
+jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
     loops = 0 # Jitter loop counter
     max_loops = 10 # Maximum jitter loops
     repeat {
-      # Calculate the perimeter of the whole chain;
-      # use the Euclidean distance between each vertex
-      perimeter <- 1 
+      # Calculate the perimeter of the whole chain via Euclidean distance
+      perimeter <- 0
+      for (i in 1:nrow(chain)) {
+        j <- i + 1
+        if (i == nrow(chain)) {
+          j <- 1 # Loop back to first vertex once end of chain is reached
+        } 
+        perimeter <- perimeter + sqrt(sum((shape[i, ] - shape[j, ])^2))
+      }
       
       for (n in 1:nrow(chain)) {
         # Choose a random point in a radius of uncertainty around the vertex

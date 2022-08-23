@@ -25,7 +25,7 @@ polygon(flip(shape, direction = c("vertical")))
 polygon(rotate(shape, angle = 90, clockwise = FALSE))
 polygon(translate(shape, x = -0.5, y = 1))
 
-polygon(jitter(shape, random = c("vertices"), factor = 0.1))
+polygon(jitter(shape, random = c("vertices"), factor = 0.01))
 polygon(jitter(shape, random = c("vertices"), factor = 0.2))
 polygon(jitter(shape, random = c("vertices"), factor = 0.3))
 polygon(jitter(shape, random = c("vertices"), factor = 0.4))
