@@ -1,12 +1,12 @@
-# Random polygon generation
+# Probabilistic polygon generation
 # Author: Kevin Jin
 
 # Preparation
 set.seed(13579)
-source("~/Documents/bsclust/functions.R")
+source("~/Documents/bsclust/code/functions.R")
 
 # Test shape generation
-shape <- generate(k = 6)
+shape <- generate(k = 3)
 
 plot(shape, xlim = c(-2, 2), ylim = c(-2, 2))
 polygon(shape)
@@ -21,7 +21,7 @@ polygon(translate(shape, x = -0.5, y = 1))
 
 # Probabilistic triangle generation from parameters (multinomial angle vectors)
 sides <- 3
-probs <- c(1/3, 1/3, 1/3)
+probs <- c(1 / 3, 1 / 3, 1 / 3)
 triangles <- rmultinom(n = 100, # Number of polygons
                        size = (sides - 2) * 180, # Total internal angle
                        prob = probs) # Probability for K angles
