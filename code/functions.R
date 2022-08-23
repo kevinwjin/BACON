@@ -23,7 +23,7 @@ generate <- function(k = 3, min = 0, max = 1) {
   # Convert Cartesian to polar coordinates for easier handling of angles
   chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain_p) <- c("r", "t")
-  for (n in 1:nrow(chain)) {
+  for (n in seq_len(nrow(chain))) {
     # Draw the vector between the current point and the centroid
     dist <- chain[n, ] - centroid
     # Take the Euclidean distance between the points
@@ -84,29 +84,27 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
     repeat {
       # Calculate the perimeter of the whole chain via Euclidean distance
       perimeter <- 0
-      for (i in 1:nrow(chain)) {
+      for (i in seq_len(nrow(chain))) {
         j <- i + 1
         if (i == nrow(chain)) {
           j <- 1 # Loop back to first vertex once end of chain is reached
         } 
         perimeter <- perimeter + sqrt(sum((shape[i, ] - shape[j, ])^2))
       }
-      
-      for (n in 1:nrow(chain)) {
+      for (n in seq_len(nrow(chain))) {
         # Choose a random point in a radius of uncertainty around the vertex
         radius <- perimeter * factor
         r <- radius * sqrt(runif(1))
         theta <- runif(1) * 2 * pi
-        
+
         # Convert polar to Cartesian coordinates for easier plotting
         chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
         chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
       }
-      
-      # Order of the vertices must remain the same and might be disturbed after jitter
+      # Order of vertices must remain the same and might be disturbed after jitter
       if (validate(chain) == TRUE | loops == max_loops) {
         if (loops == max_loops) {
-          warning("Output is not a valid polygonal chain. Please decrease the jitter factor.")
+          warning("Output is not a valid polygonal chain. Please lower the jitter factor.")
         }
         break
       } else {
@@ -122,16 +120,16 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
 }
 
 #' Translate a polygonal chain
-#' 
-#' @description 
+#'
+#' @description
 #' Moves every point of a polygonal chain by the same distance in a given
 #' direction.
 #' 
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param x Horizontal distance to translate the chain by.
 #' @param y Vertical distance to translate the chain by.
-#' 
+#'
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
 #' the translated chain.
 translate <- function(chain, x = 0, y = 0) {
@@ -143,16 +141,16 @@ translate <- function(chain, x = 0, y = 0) {
 }
 
 #' Dilate a polygonal chain
-#' 
-#' @description 
-#' Scales the size of a polygonal chain to be greater or smaller, centered 
+#'
+#' @description
+#' Scales the size of a polygonal chain to be greater or smaller, centered
 #' about its centroid.
-#' 
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#'
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
-#' @param factor Positive floating-point number to scale the chain by. 
+#' @param factor Positive floating-point number to scale the chain by.
 #' A factor > 1 dilates the chain, while a factor > 0 and < 1 shrinks the chain.
-#' 
+#'
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
 #' the dilated chain.
 dilate <- function(chain, factor = 1) {

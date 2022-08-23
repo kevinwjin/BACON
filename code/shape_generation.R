@@ -6,31 +6,18 @@ set.seed(13579)
 source("~/Documents/bsclust/functions.R")
 
 # Test shape generation
-shape <- generate(k = 3)
+shape <- generate(k = 6)
 
 plot(shape, xlim = c(-2, 2), ylim = c(-2, 2))
+polygon(shape)
 
-hpts <- chull(shape)
-hpts <- c(hpts, hpts[1]) # Close convex hull
-lines(shape[hpts, ]) # Trace convex hull
-
-lines(shape) # Trace polygon (alternate, less good)
-trace(shape) # Trace polygon (alternate, less good)
-polygon(shape) # Trace polygon (gold standard)
-
+polygon(jitter(shape, random = c("vertices"), factor = 0.01)) # Should be small
+#polygon(jitter(shape, random = c("angles")))
 polygon(dilate(shape, factor = 0.5))
 polygon(rotate(shape, angle = 90, clockwise = TRUE))
 polygon(flip(shape, direction = c("horizontal")))
-polygon(flip(shape, direction = c("vertical")))
 polygon(rotate(shape, angle = 90, clockwise = FALSE))
 polygon(translate(shape, x = -0.5, y = 1))
-
-polygon(jitter(shape, random = c("vertices"), factor = 0.01))
-polygon(jitter(shape, random = c("vertices"), factor = 0.2))
-polygon(jitter(shape, random = c("vertices"), factor = 0.3))
-polygon(jitter(shape, random = c("vertices"), factor = 0.4))
-
-polygon(jitter(shape, random = c("angles")))
 
 # Probabilistic triangle generation from parameters (multinomial angle vectors)
 sides <- 3
