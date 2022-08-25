@@ -19,7 +19,7 @@ generate <- function(k = 3, min = 0, max = 1) {
   chain[, "y"] <- runif(k, min = min, max = max)
 
   # Compute the centroid of the chain
-  centroid <- rowSums(t(chain))/nrow(chain)
+  centroid <- rowSums(t(chain)) / nrow(chain)
   # Convert Cartesian to polar coordinates for easier handling of angles
   chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain_p) <- c("r", "t")
@@ -97,8 +97,8 @@ validate <- function(chain) {
 #' polygonal chain.
 jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
-    loops = 0 # Jitter loop counter
-    max_loops = 10 # Maximum jitter loops
+    loops <- 0 # Jitter loop counter
+    max_loops <- 10 # Maximum jitter loops
     repeat {
       # Calculate the perimeter of the whole chain via Euclidean distance
       perimeter <- 0
@@ -107,7 +107,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
         if (i == nrow(chain)) {
           j <- 1 # Loop back to first vertex once end of chain is reached
         }
-        perimeter <- perimeter + sqrt(sum((shape[i, ] - shape[j, ])^2))
+        perimeter <- perimeter + sqrt(sum((chain[i, ] - chain[j, ])^2))
       }
       # Choose a random point in a radius of uncertainty around the vertex
       for (n in seq_len(nrow(chain))) {
@@ -120,7 +120,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
         chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
       }
       # If jittered output is not a chain, then re-jitter at most max_loops times
-      if (validate(chain) != FALSE | loops == max_loops) {
+      if (validate(chain) != FALSE || loops == max_loops) {
         if (loops == max_loops) {
           warning("Output is not a valid polygonal chain. Please lower the jitter factor.")
         }
@@ -176,7 +176,7 @@ dilate <- function(chain, factor = 1) {
     stop("Dilation factor must be greater than 0.\n")
   } else {
     # Calculate the centroid vector
-    centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))])
+    centroid <- t(matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))])
     chain <- (chain - centroid) * factor + centroid
   }
   return(chain)
@@ -184,10 +184,10 @@ dilate <- function(chain, factor = 1) {
 
 #' Flip a polygonal chain
 #'
-#' @description 
+#' @description
 #' Inverts a polygonal chain vertically or horizontally.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param direction String containing direction in which to flip the chain.
 #'
@@ -195,14 +195,14 @@ dilate <- function(chain, factor = 1) {
 #' the flipped chain.
 #'
 flip <- function(chain, direction = c("horizontal", "vertical")) {
-  centroid <- t(matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))])
+  centroid <- t(matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))])
   if (direction == "horizontal") {
     # Flip across the y-axis
-    chain <- (chain - centroid) %*% 
+    chain <- (chain - centroid) %*%
       matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid
   } else if (direction == "vertical") {
     # Flip across the x-axis
-    chain <- (chain - centroid) %*% 
+    chain <- (chain - centroid) %*%
       matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid
   } else {
     stop("Invalid or no direction provided.\n")
@@ -215,7 +215,7 @@ flip <- function(chain, direction = c("horizontal", "vertical")) {
 #' @description
 #' Rotates a polygonal chain by a specified angle about its centroid.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices 
+#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param angle Rotation angle in degrees.
 #' @param clockwise Rotate the chain clockwise if true, counterclockwise if false.
@@ -227,13 +227,13 @@ rotate <- function(chain, angle, clockwise = TRUE) {
   # Convert argument to radians, as R's trigonometric functions use radians
   angle <- angle * (pi / 180)
   # Calculate centroid vector
-  centroid <- matrix(rowSums(t(chain))/nrow(chain))[, rep(1, each = nrow(chain))]
+  centroid <- matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))]
   if (clockwise) {
-    rotation <- matrix(c(cos(angle), -sin(angle), 
+    rotation <- matrix(c(cos(angle), -sin(angle),
                          sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
     chain <- rotation %*% (t(chain) - centroid) + centroid
   } else {
-    rotation <- matrix(c(cos(angle), sin(angle), 
+    rotation <- matrix(c(cos(angle), sin(angle),
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
     chain <- (t(chain) - centroid) %*% rotation + centroid
   }
