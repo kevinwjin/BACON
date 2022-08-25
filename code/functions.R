@@ -62,7 +62,7 @@ validate <- function(chain) {
     require(pracma)
     angles <- matrix(nrow = nrow(chain), ncol = 1)
     for (i in seq_len(nrow(chain))) {
-      #j <- i + 1
+      j <- i + 1
 
       if (i == nrow(chain)) {
         j <- 1 # Loop back to first vertex once end of chain is reached
@@ -71,7 +71,7 @@ validate <- function(chain) {
       #angles[i] <- Pi + atan2(V[i] %*% V[i + 1], V[i] * V[i + 1])
 
       v1 <- chain[i, ] - chain[nrow(chain), ]
-      v2 <- chain[i + 1, ] - chain[i, ]
+      v2 <- chain[j, ] - chain[i, ]
 
       angles[i] <- pi + atan2(cross(c(v1, 0), c(v2, 0))[3], c(v1) %*% c(v2))
     }
