@@ -10,6 +10,7 @@
 ##
 ## 2. Finish interior angle calculation function.
 ##
+## 3. Finish angle portion of jitter function.
 
 #' Generate a random polygonal chain
 #'
@@ -61,8 +62,8 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' chain.
 validate <- function(chain) {
   # Order of vertices must remain the same and might be disturbed after jitter
-  #if (shape[1, ] == shape[nrow(shape), ]) {
-  if (identical(shape[1, ], shape[1, ])) {
+  #if (chain[1, ] == shape[nrow(chain), ]) {
+  if (identical(chain[1, ], chain[1, ])) {
     is_chain <- TRUE
   } else {
     is_chain <- FALSE
@@ -83,8 +84,9 @@ validate <- function(chain) {
 #' vertices of the polygonal chain.
 get_internal_angles <- function(chain) {
   if (validate(chain)) {
-    require(pracma) # Cross product calculation
-    angles <- matrix(nrow = nrow(chain), ncol = 1)
+    require(pracma) # For calculating the vector cross product
+    angles <- matrix(nrow = nrow(chain), ncol = 1) # Extracted angles
+    
     for (i in seq_len(nrow(chain))) {
       j <- i + 1
       
@@ -99,8 +101,9 @@ get_internal_angles <- function(chain) {
       
       angles[i] <- pi + atan2(cross(c(v1, 0), c(v2, 0))[3], c(v1) %*% c(v2))
     }
-    # Convert angles to degrees
-    angles <- angles * (180 / pi)
+    
+    angles <- angles * (180 / pi) # Convert angles to degrees
+    
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
