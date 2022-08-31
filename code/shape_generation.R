@@ -8,7 +8,7 @@
 ## as long as they're not literally all in a line, they should be able to 
 ## assume a closed polygonal chain.
 ##
-## 2. Finish interior angle calculation function.
+## 2. Finish internal angle calculation function.
 ##
 ## 3. Finish angle portion of jitter function.
 
@@ -31,21 +31,14 @@ generate <- function(k = 3, min = 0, max = 1) {
 
   # Compute the centroid of the chain
   centroid <- rowSums(t(chain)) / nrow(chain)
-  # Convert Cartesian to polar coordinates for easier handling of angles
-  chain_p <- matrix(nrow = k, ncol = 2, byrow = FALSE)
-  colnames(chain_p) <- c("r", "t")
+  
+  # Sort vertices by decreasing angle
+  sorting_angles <- matrix(nrow = nrow(chain), ncol = 1)
   for (n in seq_len(nrow(chain))) {
-    # Draw the vector between the current point and the centroid
-    dist <- centroid - chain[n, ]
-    # Take the Euclidean distance between the points
-    r <- sqrt(dist[1] ^ 2 + dist[2] ^ 2)
-    # Calculate angle sweep from the x-axis
-    t <- atan2(dist[2], dist[1]) * (180 / pi)
-    chain_p[n, "r"] <- r
-    chain_p[n, "t"] <- t
+    dist <- chain[n, ] - centroid
+    sorting_angles[n] <- atan2(dist[2], dist[1])
   }
-  # Sort vertices by increasing angle sweep from x-axis
-  chain <- chain[order(chain_p[, "t"]), ]
+  chain <- chain[order(sorting_angles, decreasing = TRUE), ]
   
   return(chain)
 }
@@ -84,25 +77,31 @@ validate <- function(chain) {
 #' vertices of the polygonal chain.
 get_internal_angles <- function(chain) {
   if (validate(chain)) {
-    require(pracma) # For calculating the vector cross product
-    angles <- matrix(nrow = nrow(chain), ncol = 1) # Extracted angles
-    
-    for (i in seq_len(nrow(chain))) {
-      j <- i + 1
-      
+    # Represent sides of the polygonal chain as vectors
+    vectors <- matrix(nrow = nrow(chain), ncol = 2)
+    for (i in seq_len(nrow(chain))) { # Loop over vertices clockwise
+      j <- i + 1 # i = initial point; j = terminal point 
       if (i == nrow(chain)) {
-        j <- 1 # Loop back to first vertex once end of chain is reached
+        j <- 1 
       }
-      
-      #angles[i] <- Pi + atan2(V[i] %*% V[i + 1], V[i] * V[i + 1])
-      
-      v1 <- chain[i, ] - chain[nrow(chain), ] # Incoming vector
-      v2 <- chain[j, ] - chain[i, ] # Outgoing vector
-      
-      angles[i] <- pi + atan2(cross(c(v1, 0), c(v2, 0))[3], c(v1) %*% c(v2))
+      vectors[i, ] <- chain[j, ] - chain[i, ]
     }
     
-    angles <- angles * (180 / pi) # Convert angles to degrees
+    # Extract the internal angles of the polygonal chain
+    angles <- matrix(nrow = nrow(chain), ncol = 1)
+    for (i in seq_len(nrow(chain))) {
+      j <- i + 1 # i = incoming vector; j = outgoing vector
+      if (i == nrow(chain)) { # Return to vertex 1 once end of chain is reached
+        j <- 1 
+      }
+      # Calculate angle between incoming and outgoing vectors
+      #angles[i] <- pi + atan2(v1[1] * v2[2] - v2[1] * v1[2],
+      #                        v1[1] * v2[1] + v1[2] * v2[2])
+      
+      angles[i] <- pi + atan2(chain[i, 1] * chain[j, 2] - chain[j, 1] * chain[i, 2],
+                              chain[i, 1] * chain[j, 1] + chain[i, 2] * chain[j, 2])
+    }
+    angles <- c(t(angles * (180 / pi))) # Convert to degrees and convert to vector
     
   } else {
     stop("Argument is not a closed polygonal chain.")

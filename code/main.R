@@ -81,3 +81,4 @@ for (i in seq(1, n * k, by = k)) {
   x[x_row, ] <- get_internal_angles(shapes[i:(i + (k - 1)), ])
   x_row <- x_row + 1
 }
+round(x) # Round to integers since we are treating the angle vector as a discrete variable
