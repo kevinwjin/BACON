@@ -1,4 +1,4 @@
-// Bayesian model-based shape clustering
+// bsclust: Bayesian landmark-based shape clustering
 // Authors: Kevin Jin, Qiwei Li
 
 #include <Rcpp.h>
