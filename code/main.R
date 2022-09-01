@@ -1,9 +1,6 @@
 # Execution script (data generation, model testing)
 # Author: Kevin Jin
 
-## To-do:
-## 1. Combine triangle generation within each cluster into one for loop
-
 # Preparation
 set.seed(13579)
 source("~/Documents/bsclust/code/shape_generation.R")
@@ -14,7 +11,7 @@ sourceCpp("code/model.cpp")
 
 # Generate test shapes
 shape <- generate(k = 3)
-plot(shape, xlim = c(-2, 2), ylim = c(-2, 2))
+plot(shape, xlim = c(-2, 2), ylim = c(-2, 2), type = "l")
 polygon(shape)
 
 polygon(jitter(shape, random = c("vertices"), factor = 0.01)) # Factor should be small
