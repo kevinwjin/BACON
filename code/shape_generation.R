@@ -1,17 +1,6 @@
 # Probabilistic polygonal chain generation and manipulation
 # Author: Kevin Jin
 
-## To-do:
-## 1. Determine whether validate function is necessary, because it currently
-## checks if the first and last vertices are the same. Note that this may
-## necessitate rewriting all functions that check for nrows. Every chain,
-## as long as they're not literally all in a line, they should be able to 
-## assume a closed polygonal chain.
-##
-## 2. Finish internal angle calculation function.
-##
-## 3. Finish angle portion of jitter function.
-
 #' Generate a random polygonal chain
 #'
 #' @description Uniformly generates the vertices of a polygonal chain, sorting
@@ -208,26 +197,26 @@ dilate <- function(chain, factor = 1) {
   return(chain)
 }
 
-#' Flip a polygonal chain
+#' Reflect a polygonal chain
 #'
 #' @description
-#' Inverts a polygonal chain vertically or horizontally.
+#' Reflects a polygonal chain vertically or horizontally.
 #'
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
-#' @param direction String containing direction in which to flip the chain.
+#' @param direction String containing direction in which to reflect the chain.
 #'
 #' @return A 2 x k matrix containing the x-y coordinates of the vertices of
-#' the flipped chain.
+#' the reflected chain.
 #'
-flip <- function(chain, direction = c("horizontal", "vertical")) {
+reflect <- function(chain, direction = c("horizontal", "vertical")) {
   centroid <- t(matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))])
   if (direction == "horizontal") {
-    # Flip across the y-axis
+    # Reflect across the y-axis
     chain <- (chain - centroid) %*%
       matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid
   } else if (direction == "vertical") {
-    # Flip across the x-axis
+    # REflect across the x-axis
     chain <- (chain - centroid) %*%
       matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid
   } else {
