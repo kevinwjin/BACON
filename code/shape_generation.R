@@ -1,17 +1,17 @@
 # Probabilistic polygonal chain generation and manipulation
 # Author: Kevin Jin
 
-#' Generate a random polygonal chain
+#' Generate a random closed polygonal chain
 #'
-#' @description Uniformly generates the vertices of a polygonal chain, sorting
-#' the vertices by angle sweep from the x-axis.
+#' @description Randomly generates the vertices of a closed polygonal chain, 
+#' sorting the vertices by angle sweep from the x-axis.
 #'
 #' @param k Number of vertices to generate.
 #' @param min Minimum parameter for the uniform distribution.
 #' @param max Maximum parameter for the uniform distribution.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of the
-#' polygonal chain.
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices 
+#' of the polygonal chain.
 generate <- function(k = 3, min = 0, max = 1) {
   chain <- matrix(nrow = k, ncol = 2, byrow = FALSE)
   colnames(chain) <- c("x", "y")
@@ -29,6 +29,9 @@ generate <- function(k = 3, min = 0, max = 1) {
   }
   chain <- chain[order(sorting_angles, decreasing = TRUE), ]
   
+  # Repeat first row at end to form closed chain
+  chain <- rbind(chain, chain[1, ])
+  
   return(chain)
 }
 
@@ -44,8 +47,7 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' chain.
 validate <- function(chain) {
   # Order of vertices must remain the same and might be disturbed after jitter
-  #if (chain[1, ] == shape[nrow(chain), ]) {
-  if (identical(chain[1, ], chain[1, ])) {
+  if (identical(chain[1, ], chain[nrow(chain), ])) {
     is_chain <- TRUE
   } else {
     is_chain <- FALSE
@@ -53,18 +55,18 @@ validate <- function(chain) {
   return(is_chain)
 }
 
-#' Calculate the internal angles of a closed polygonal chain
+#' Calculate the interior angles of a closed polygonal chain
 #'
 #' @description
 #' If the given chain of coordinates is a closed polygonal chain, 
-#' return a vector of its internal angles.
+#' return a vector of its interior angles.
 #'
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
-#' @return A vector of length k containing the internal angles of the 
+#' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
-get_internal_angles <- function(chain) {
+get_interior_angles <- function(chain) {
   if (validate(chain)) {
     # Represent sides of the polygonal chain as vectors
     vectors <- matrix(nrow = nrow(chain), ncol = 2)
@@ -76,7 +78,7 @@ get_internal_angles <- function(chain) {
       vectors[i, ] <- chain[j, ] - chain[i, ]
     }
     
-    # Extract the internal angles of the polygonal chain
+    # Extract the interior angles of the polygonal chain
     angles <- matrix(nrow = nrow(chain), ncol = 1)
     for (i in seq_len(nrow(chain))) {
       j <- i + 1 # i = incoming vector; j = outgoing vector
@@ -100,7 +102,9 @@ get_internal_angles <- function(chain) {
 
 #' Add jitter to a polygonal chain
 #'
-#' @description Randomizes the vertices or angles of a polygonal chain.
+#' @description Randomizes the vertices or angles of a polygonal chain. If
+#' output is not a valid polygonal chain, re-jitter a maximum of 10 times 
+#' before giving up.
 #'
 #' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
@@ -114,15 +118,19 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
     loops <- 0 # Jitter loop counter
     max_loops <- 10 # Maximum jitter loops
+    
+    # Eliminate repeated row for now
+    chain <- chain[-nrow(chain), ]
+  
     repeat {
       # Calculate the perimeter of the whole chain via Euclidean distance
       perimeter <- 0
       for (i in seq_len(nrow(chain))) {
         j <- i + 1
-        if (i == nrow(chain)) {
+        if (i == (nrow(chain))) {
           j <- 1 # Loop back to first vertex once end of chain is reached
         }
-        perimeter <- perimeter + sqrt(sum((chain[i, ] - chain[j, ])^2))
+        perimeter <- perimeter + sqrt(sum((chain[i, ] - chain[j, ]) ^ 2))
       }
       # Choose a random point in a radius of uncertainty around the vertex
       for (n in seq_len(nrow(chain))) {
@@ -134,16 +142,21 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
         chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
         chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
       }
+      
       # If jittered output is not a chain, then re-jitter at most max_loops times
-      if (validate(chain) != FALSE || loops == max_loops) {
+      if (validate(chain) == FALSE || loops == max_loops) {
         if (loops == max_loops) {
-          warning("Output is not a valid polygonal chain. Please lower the jitter factor.")
+          warning("Could not create valid chain in 10 attempts; please lower the jitter factor.")
         }
         break
       } else {
         loops <- loops + 1
       }
     }
+    
+    # Add repeated row back
+    chain <- rbind(chain, chain[1, ])
+    
   } else if (random == "angles") {
     stop("Not implemented yet.")
   } else {
@@ -239,19 +252,32 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
 #' the rotated chain.
 #'
 rotate <- function(chain, angle, clockwise = TRUE) {
-  # Convert argument to radians, as R's trigonometric functions use radians
+  # Convert argument angle to radians, as R's trigonometric functions use radians
   angle <- angle * (pi / 180)
+  
+  # Eliminate repeated row for now
+  chain <- chain[-nrow(chain), ]
+  
   # Calculate centroid vector
   centroid <- matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))]
   if (clockwise) {
+    # Calculate clockwise rotation matrix
     rotation <- matrix(c(cos(angle), -sin(angle),
                          sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    # Rotate chain in place
     chain <- rotation %*% (t(chain) - centroid) + centroid
   } else {
+    # Calculate counter-clockwise rotation matrix
     rotation <- matrix(c(cos(angle), sin(angle),
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    chain <- (t(chain) - centroid) %*% rotation + centroid
+    # Rotate chain in place
+    chain <- rotation %*% (t(chain) - centroid) + centroid
   }
+
+  # Add repeated row back
+  chain <- t(chain)
+  chain <- rbind(chain, chain[1, ])
+  
   # Transpose chain to original form
-  return(t(chain))
+  return(chain)
 }

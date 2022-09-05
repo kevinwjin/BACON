@@ -12,16 +12,15 @@ sourceCpp("code/model.cpp")
 # Generate test shapes
 shape <- generate(k = 3)
 plot(shape, xlim = c(-2, 2), ylim = c(-2, 2), type = "l")
-polygon(shape)
 
 polygon(jitter(shape, random = c("vertices"), factor = 0.01)) # Factor should be small
 #polygon(jitter(shape, random = c("angles"), factor = 0.01))
-polygon(dilate(shape, factor = 0.5))
-polygon(rotate(shape, angle = 90, clockwise = TRUE))
-polygon(flip(shape, direction = c("horizontal")))
-polygon(flip(shape, direction = c("vertical")))
-polygon(rotate(shape, angle = 90, clockwise = FALSE))
 polygon(translate(shape, x = -0.5, y = 1))
+polygon(dilate(shape, factor = 0.5))
+polygon(reflect(shape, direction = c("horizontal")))
+polygon(reflect(shape, direction = c("vertical")))
+polygon(rotate(shape, angle = 180, clockwise = TRUE))
+polygon(rotate(shape, angle = 180, clockwise = FALSE))
 
 # Multinomial angle vector-based triangle generation
 dmultinom(c(29, 61, 90), size = (sides - 2) * 180, prob = probs) # Density
