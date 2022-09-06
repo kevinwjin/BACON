@@ -40,7 +40,7 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' @description
 #' Determines if the given chain of coordinates is a polygonal chain or not
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
 #' @return Boolean value indicating whether the given chain is a polygonal
@@ -61,7 +61,7 @@ validate <- function(chain) {
 #' If the given chain of coordinates is a closed polygonal chain, 
 #' return a vector of its interior angles.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
 #' @return A vector of length k containing the interior angles of the 
@@ -100,19 +100,56 @@ get_interior_angles <- function(chain) {
   return(angles)
 }
 
+#' Calculate the relative side lengths of a closed polygonal chain
+#'
+#' @description
+#' If the given chain of coordinates is a closed polygonal chain, 
+#' return a vector of its side lengths relative to the perimeter.
+#'
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' of the polygonal chain.
+#'
+#' @return A vector of length k containing the side lengths of the polygonal 
+#' chain.
+get_side_lengths <- function(chain) {
+  if (validate(chain)) {
+    # Eliminate repeated row for now
+    chain <- chain[-nrow(chain), ]
+    
+    # Store side lengths in matrix
+    side_lengths <- matrix(nrow = nrow(chain), ncol = 1)
+    
+    # Calculate the perimeter of the whole chain via Euclidean distance
+    perimeter <- 0
+    for (i in seq_len(nrow(chain))) {
+      j <- i + 1
+      if (i == (nrow(chain))) {
+        j <- 1 # Loop back to first vertex once end of chain is reached
+      }
+      side_length <- sqrt(sum((chain[i, ] - chain[j, ]) ^ 2))
+      side_lengths[i, ] <- side_length
+      perimeter <- perimeter + side_length
+    }
+
+  } else {
+    stop("Argument is not a closed polygonal chain.")
+  }
+  return(c(side_lengths))
+}
+
 #' Add jitter to a polygonal chain
 #'
 #' @description Randomizes the vertices or angles of a polygonal chain. If
 #' output is not a valid polygonal chain, re-jitter a maximum of 10 times 
 #' before giving up.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param random String containing polygon parameter to randomize.
 #' @param factor Floating point number from 0 to 1 exclusive as a percentage
 #' of the perimeter of the polygonal chain to randomize by.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of the
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of the
 #' polygonal chain.
 jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
@@ -165,18 +202,18 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   return(chain)
 }
 
-#' Translate a polygonal chain
+#' Translate a closed polygonal chain
 #'
 #' @description
 #' Moves every point of a polygonal chain by the same distance in a given
 #' direction.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param x Horizontal distance to translate the chain by.
 #' @param y Vertical distance to translate the chain by.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
 #' the translated chain.
 translate <- function(chain, x = 0, y = 0) {
   # Horizontal translation
@@ -186,18 +223,18 @@ translate <- function(chain, x = 0, y = 0) {
   return(chain)
 }
 
-#' Dilate a polygonal chain
+#' Dilate a closed polygonal chain
 #'
 #' @description
 #' Scales the size of a polygonal chain to be greater or smaller, centered
 #' about its centroid.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param factor Positive floating-point number to scale the chain by.
 #' A factor > 1 dilates the chain, while a factor > 0 and < 1 shrinks the chain.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
 #' the dilated chain.
 dilate <- function(chain, factor = 1) {
   if (factor <= 0) {
@@ -210,16 +247,16 @@ dilate <- function(chain, factor = 1) {
   return(chain)
 }
 
-#' Reflect a polygonal chain
+#' Reflect a closed polygonal chain
 #'
 #' @description
 #' Reflects a polygonal chain vertically or horizontally.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param direction String containing direction in which to reflect the chain.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
 #' the reflected chain.
 #'
 reflect <- function(chain, direction = c("horizontal", "vertical")) {
@@ -238,17 +275,17 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
   return(chain)
 }
 
-#' Rotate a polygonal chain
+#' Rotate a closed polygonal chain
 #'
 #' @description
 #' Rotates a polygonal chain by a specified angle about its centroid.
 #'
-#' @param chain A 2 x k matrix containing the x-y coordinates of the vertices
+#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param angle Rotation angle in degrees.
 #' @param clockwise Rotate the chain clockwise if true, counterclockwise if false.
 #'
-#' @return A 2 x k matrix containing the x-y coordinates of the vertices of
+#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
 #' the rotated chain.
 #'
 rotate <- function(chain, angle, clockwise = TRUE) {
