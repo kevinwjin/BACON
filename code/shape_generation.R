@@ -130,6 +130,9 @@ get_side_lengths <- function(chain) {
       side_lengths[i, ] <- side_length
       perimeter <- perimeter + side_length
     }
+  
+    # Normalize side lengths by the perimeter to get relative length
+    side_lengths <- side_lengths / perimeter
 
   } else {
     stop("Argument is not a closed polygonal chain.")
