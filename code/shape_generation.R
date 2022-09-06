@@ -193,7 +193,6 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
         loops <- loops + 1
       }
     }
-    
     # Add repeated row back
     chain <- rbind(chain, chain[1, ])
     
