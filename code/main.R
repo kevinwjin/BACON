@@ -41,40 +41,52 @@ for (i in seq(1, n * k, by = k)) {
   shapes[i:(i + (k - 1)), ] <- generate(k = k)
 }
 
-# Method 2: Replicate two triangles 30 times each and add jitter
-n <- 60 # Number of samples
+# Method 2: Replicate two triangles 5 times each and add jitter
+n <- 10 # Number of samples
 k <- 3 # Number of vertices
 z <- 2 # Pre-specified number of clusters
 
 shape_1 <- generate(k = k) # Generate a triangle
 shapes_1 <- do.call(rbind, replicate(n / 2, shape_1, simplify = FALSE)) # Replicate n / 2 times
-for (i in seq(1, (n * k) / 2, by = k)) { # Apply jitter
-  shapes_1[i:(i + (k - 1)), ] <- jitter(shapes_1[i:(i + (k - 1)), ],
+for (i in seq(1, (n / 2 * (k + 1)), by = (k + 1))) { # Apply jitter (each 4 rows is a triangle)
+  shapes_1[i:(i + k), ] <- jitter(shapes_1[i:(i + k), ],
                                         random = c("vertices"),
                                         factor = 0.01)
 }
+
 shape_2 <- generate(k = k) # Generate another triangle
 shapes_2 <- do.call(rbind, replicate(n / 2, shape_2, simplify = FALSE)) # Replicate n / 2 times
-for (i in seq(1, (n * k) / 2, by = k)) { # Apply jitter
-  shapes_2[i:(i + (k - 1)), ] <- jitter(shapes_2[i:(i + (k - 1)), ],
+for (i in seq(1, (n / 2 * (k + 1)), by = (k + 1))) { # Apply jitter
+  shapes_2[i:(i + k), ] <- jitter(shapes_2[i:(i + k), ],
                                         random = c("vertices"),
                                         factor = 0.01)
 }
+
 shapes <- rbind(shapes_1, shapes_2) # Combine into 1 matrix
 
 # Draw one triangle per plot
-for (i in seq(1, n * k, by = k)) {
-  plot(NULL, xlim = c(-2, 2), ylim = c(-2, 2))
-  polygon(shapes[i:(i + (k - 1)), ])
+count <- 0
+for (i in seq(1, (n / 2 * (k + 1)), by = (k + 1))) {
+  plot(shapes[i:(i + k), ], xlim = c(-2, 2), ylim = c(-2, 2), type = "l")
+  count <- count + 1
+  print(count)
 }
 
 # Extract the angle vectors of the triangles (x, the data to be clustered)
 p <- 3 # Number of categories (length of angle vector)
 x <- matrix(nrow = n, ncol = p, byrow = TRUE) # Data (angle vectors)
 
-x_row <- 1 # Independent row counter for X
+x_row <- 1 # Independent row counter
 for (i in seq(1, n * k, by = k)) {
-  x[x_row, ] <- get_internal_angles(shapes[i:(i + (k - 1)), ])
+  x[x_row, ] <- get_interior_angles(shapes[i:(i + (k - 1)), ])
   x_row <- x_row + 1
 }
 round(x) # Round to integers since we are treating the angle vector as a discrete variable
+
+# Extract side lengths of the triangles
+x_s <- matrix(nrow = n, ncol = p, byrow = TRUE) # Data (angle vectors)
+x_row <- 1 # Independent row counter
+for (i in seq(1, n * k, by = k)) {
+  x[x_row, ] <- get_side_lengths(shapes[i:(i + (k - 1)), ])
+  x_row <- x_row + 1
+}
