@@ -10,7 +10,7 @@
 #' @param min Minimum parameter for the uniform distribution.
 #' @param max Maximum parameter for the uniform distribution.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices 
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
 generate <- function(k = 3, min = 0, max = 1) {
   chain <- matrix(nrow = k, ncol = 2, byrow = FALSE)
@@ -40,7 +40,7 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' @description
 #' Determines if the given chain of coordinates is a polygonal chain or not
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
 #' @return Boolean value indicating whether the given chain is a polygonal
@@ -55,49 +55,106 @@ validate <- function(chain) {
   return(is_chain)
 }
 
+#' Calculate the angle between three points
+#'
+#' @description
+#' Given a set of three points, calculate the angle between them using the 
+#' Law of Cosines.
+#'
+#' @param chain A 3 x 2 matrix containing the x-y coordinates of the vertices
+#' of three points.
+#'
+#' @return A numeric containing the angle, in degrees, between the three points.
+three_point_angle <- function(points) {
+  pointA <- points[1, ]
+  pointB <- points[2, ]
+  pointC <- points[3, ]
+
+  x1x2s <- (pointA[1] - pointB[1]) ^ 2
+  x1x3s <- (pointA[1] - pointC[1]) ^ 2
+  x2x3s <- (pointB[1] - pointC[1]) ^ 2
+
+  y1y2s <- (pointA[2] - pointB[2]) ^ 2
+  y1y3s <- (pointA[2] - pointC[2]) ^ 2
+  y2y3s <- (pointB[2] - pointC[2]) ^ 2
+
+  angle <- acos((x1x2s + y1y2s + x2x3s + y2y3s - x1x3s - y1y3s) /
+                  (2 * sqrt(x1x2s + y1y2s) * sqrt(x2x3s + y2y3s)))
+  
+  return(angle * (180 / pi))
+}
+
 #' Calculate the interior angles of a closed polygonal chain
 #'
 #' @description
 #' If the given chain of coordinates is a closed polygonal chain, 
 #' return a vector of its interior angles.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
   if (validate(chain)) {
-    # Represent sides of the polygonal chain as vectors
-    vectors <- matrix(nrow = nrow(chain), ncol = 2)
-    for (i in seq_len(nrow(chain))) { # Loop over vertices clockwise
-      j <- i + 1 # i = initial point; j = terminal point 
-      if (i == nrow(chain)) {
-        j <- 1 
-      }
-      vectors[i, ] <- chain[j, ] - chain[i, ]
+    # # Represent sides of the polygonal chain as vectors
+    # vectors <- matrix(nrow = nrow(chain), ncol = 2)
+    # for (i in seq_len(nrow(chain))) { # Loop over vertices clockwise
+    #   j <- i + 1 # i = initial point; j = terminal point 
+    #   if (i == nrow(chain)) {
+    #     j <- 1 
+    #   }
+    #   vectors[i, ] <- chain[j, ] - chain[i, ]
+    # }
+    # 
+    # # Extract the interior angles of the polygonal chain
+    # angles <- matrix(nrow = nrow(chain), ncol = 1)
+    # for (i in seq_len(nrow(chain))) {
+    #   j <- i + 1 # i = incoming vector; j = outgoing vector
+    #   if (i == nrow(chain)) { # Return to vertex 1 once end of chain is reached
+    #     j <- 1 
+    #   }
+    #   # Calculate angle between incoming and outgoing vectors
+    #   #angles[i] <- pi + atan2(v1[1] * v2[2] - v2[1] * v1[2],
+    #   #                        v1[1] * v2[1] + v1[2] * v2[2])
+    #   
+    #   angles[i] <- pi + atan2(chain[i, 1] * chain[j, 2] - chain[j, 1] * chain[i, 2],
+    #                           chain[i, 1] * chain[j, 1] + chain[i, 2] * chain[j, 2])
+    # }
+    # angles <- c(t(angles * (180 / pi))) # Convert to degrees and convert to vector
+    # 
+
+    # Qiwei's code
+    pc <- generate(4)
+    plot(pc, type = "l")
+    text(pc[1:4,], labels = 1:4)
+    n <- dim(pc)[1]
+    new_pc <- rbind(pc[n - 1,], pc)
+    angle <- rep(NA, n - 1)
+    for (i in 2:(n)) {
+      angle[i - 1] <- three_point_angle(new_pc[(i - 1):(i + 1),])
     }
+    
+    # Eliminate repeated row for now
+    chain <- chain[-nrow(chain), ]
     
     # Extract the interior angles of the polygonal chain
     angles <- matrix(nrow = nrow(chain), ncol = 1)
     for (i in seq_len(nrow(chain))) {
-      j <- i + 1 # i = incoming vector; j = outgoing vector
-      if (i == nrow(chain)) { # Return to vertex 1 once end of chain is reached
-        j <- 1 
+      j <- i + 2
+
+      if (i == nrow(chain)) {
+        j <- 1
       }
-      # Calculate angle between incoming and outgoing vectors
-      #angles[i] <- pi + atan2(v1[1] * v2[2] - v2[1] * v1[2],
-      #                        v1[1] * v2[1] + v1[2] * v2[2])
       
-      angles[i] <- pi + atan2(chain[i, 1] * chain[j, 2] - chain[j, 1] * chain[i, 2],
-                              chain[i, 1] * chain[j, 1] + chain[i, 2] * chain[j, 2])
+      angles[i] <- three_point_angle(chain[(i:j), ])
+      
     }
-    angles <- c(t(angles * (180 / pi))) # Convert to degrees and convert to vector
     
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
-  return(angles)
+  return(c(angles))
 }
 
 #' Calculate the relative side lengths of a closed polygonal chain
@@ -106,7 +163,7 @@ get_interior_angles <- function(chain) {
 #' If the given chain of coordinates is a closed polygonal chain, 
 #' return a vector of its side lengths relative to the perimeter.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #'
 #' @return A vector of length k containing the side lengths of the polygonal 
@@ -146,13 +203,13 @@ get_side_lengths <- function(chain) {
 #' output is not a valid polygonal chain, re-jitter a maximum of 10 times 
 #' before giving up.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param random String containing polygon parameter to randomize.
 #' @param factor Floating point number from 0 to 1 exclusive as a percentage
 #' of the perimeter of the polygonal chain to randomize by.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of the
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of the
 #' polygonal chain.
 jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
@@ -210,12 +267,12 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
 #' Moves every point of a polygonal chain by the same distance in a given
 #' direction.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param x Horizontal distance to translate the chain by.
 #' @param y Vertical distance to translate the chain by.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of
 #' the translated chain.
 translate <- function(chain, x = 0, y = 0) {
   # Horizontal translation
@@ -231,12 +288,12 @@ translate <- function(chain, x = 0, y = 0) {
 #' Scales the size of a polygonal chain to be greater or smaller, centered
 #' about its centroid.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param factor Positive floating-point number to scale the chain by.
 #' A factor > 1 dilates the chain, while a factor > 0 and < 1 shrinks the chain.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of
 #' the dilated chain.
 dilate <- function(chain, factor = 1) {
   if (factor <= 0) {
@@ -254,11 +311,11 @@ dilate <- function(chain, factor = 1) {
 #' @description
 #' Reflects a polygonal chain vertically or horizontally.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param direction String containing direction in which to reflect the chain.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of
 #' the reflected chain.
 #'
 reflect <- function(chain, direction = c("horizontal", "vertical")) {
@@ -282,12 +339,12 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
 #' @description
 #' Rotates a polygonal chain by a specified angle about its centroid.
 #'
-#' @param chain A 2 x (k + 1) matrix containing the x-y coordinates of the vertices
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
 #' of the polygonal chain.
 #' @param angle Rotation angle in degrees.
 #' @param clockwise Rotate the chain clockwise if true, counterclockwise if false.
 #'
-#' @return A 2 x (k + 1) matrix containing the x-y coordinates of the vertices of
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of
 #' the rotated chain.
 #'
 rotate <- function(chain, angle, clockwise = TRUE) {
