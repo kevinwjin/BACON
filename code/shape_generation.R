@@ -96,65 +96,33 @@ three_point_angle <- function(points) {
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
+  # pc <- generate(4) # Generate a quadrilateral chain
+  # plot(pc, type = "l") # Draw the quadrilateral chain
+  # text(pc[1:4,], labels = 1:4) # Label vertices
+  # n <- nrow(pc) # Number of vertices (k + 1 due to closedness)
+  # new_pc <- rbind(pc[n - 1, ], pc) # Remove first vertex
+  # angle <- rep(NA, n - 1) # Create empty angle vector of length k
+  # for (i in 2:n) { # Calculate angle vectors over chain
+  #   angle[i - 1] <- three_point_angle(new_pc[(i - 1):(i + 1), ])
+  # }
   if (validate(chain)) {
-    # # Represent sides of the polygonal chain as vectors
-    # vectors <- matrix(nrow = nrow(chain), ncol = 2)
-    # for (i in seq_len(nrow(chain))) { # Loop over vertices clockwise
-    #   j <- i + 1 # i = initial point; j = terminal point 
-    #   if (i == nrow(chain)) {
-    #     j <- 1 
-    #   }
-    #   vectors[i, ] <- chain[j, ] - chain[i, ]
-    # }
-    # 
-    # # Extract the interior angles of the polygonal chain
-    # angles <- matrix(nrow = nrow(chain), ncol = 1)
-    # for (i in seq_len(nrow(chain))) {
-    #   j <- i + 1 # i = incoming vector; j = outgoing vector
-    #   if (i == nrow(chain)) { # Return to vertex 1 once end of chain is reached
-    #     j <- 1 
-    #   }
-    #   # Calculate angle between incoming and outgoing vectors
-    #   #angles[i] <- pi + atan2(v1[1] * v2[2] - v2[1] * v1[2],
-    #   #                        v1[1] * v2[1] + v1[2] * v2[2])
-    #   
-    #   angles[i] <- pi + atan2(chain[i, 1] * chain[j, 2] - chain[j, 1] * chain[i, 2],
-    #                           chain[i, 1] * chain[j, 1] + chain[i, 2] * chain[j, 2])
-    # }
-    # angles <- c(t(angles * (180 / pi))) # Convert to degrees and convert to vector
-    # 
-
-    # Qiwei's code
-    pc <- generate(4)
-    plot(pc, type = "l")
-    text(pc[1:4,], labels = 1:4)
-    n <- dim(pc)[1]
-    new_pc <- rbind(pc[n - 1,], pc)
+    # Number of vertices (k) + 1 due to closedness
+    n <- nrow(chain)
+    
+    # Remove first vertex
+    chain <- rbind(chain[n - 1, ], chain)
+    
+    # Create empty angle vector of length k
     angle <- rep(NA, n - 1)
-    for (i in 2:(n)) {
-      angle[i - 1] <- three_point_angle(new_pc[(i - 1):(i + 1),])
+    
+    # Calculate angle vectors over chain
+    for (i in 2:n) { 
+      angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
     }
-    
-    # Eliminate repeated row for now
-    chain <- chain[-nrow(chain), ]
-    
-    # Extract the interior angles of the polygonal chain
-    angles <- matrix(nrow = nrow(chain), ncol = 1)
-    for (i in seq_len(nrow(chain))) {
-      j <- i + 2
-
-      if (i == nrow(chain)) {
-        j <- 1
-      }
-      
-      angles[i] <- three_point_angle(chain[(i:j), ])
-      
-    }
-    
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
-  return(c(angles))
+  return(round(angle))
 }
 
 #' Calculate the relative side lengths of a closed polygonal chain
@@ -324,10 +292,12 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
     # Reflect across the y-axis
     chain <- (chain - centroid) %*%
       matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid
+    
   } else if (direction == "vertical") {
-    # REflect across the x-axis
+    # Reflect across the x-axis
     chain <- (chain - centroid) %*%
       matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid
+    
   } else {
     stop("Invalid or no direction provided.\n")
   }
@@ -360,12 +330,15 @@ rotate <- function(chain, angle, clockwise = TRUE) {
     # Calculate clockwise rotation matrix
     rotation <- matrix(c(cos(angle), -sin(angle),
                          sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    
     # Rotate chain in place
     chain <- rotation %*% (t(chain) - centroid) + centroid
+    
   } else {
     # Calculate counter-clockwise rotation matrix
     rotation <- matrix(c(cos(angle), sin(angle),
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    
     # Rotate chain in place
     chain <- rotation %*% (t(chain) - centroid) + centroid
   }
