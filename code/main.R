@@ -15,16 +15,6 @@ polygon(dilate(shape, factor = 0.5))
 polygon(reflect(shape, direction = c("vertical")))
 polygon(rotate(shape, angle = 180, clockwise = FALSE))
 
-#### Multinomial angle vector-based triangle generation ####
-dmultinom(c(29, 61, 90), size = (sides - 2) * 180, prob = probs) # Density
-
-sides <- 3
-probs <- c(1 / 3, 1 / 3, 1 / 3)
-triangles <- rmultinom(n = 100, # Number of polygons
-                       size = (sides - 2) * 180, # Total internal angle
-                       prob = probs) # Probability for K angles
-t(triangles) # Generated vectors
-
 #### Generate data: Two different shapes, 30 each with slight variations ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
 n <- 60 # Total number of shapes
