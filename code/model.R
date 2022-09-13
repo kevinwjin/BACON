@@ -1,5 +1,5 @@
 # bsclust: Bayesian landmark-based shape clustering
-# Authors: Kevin Jin, Qiwei Li
+# Authors: Kevin Jin, Huimin Li, Qiwei Li
 
 ## Read data
 ## Preparation

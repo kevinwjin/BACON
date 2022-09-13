@@ -1,5 +1,5 @@
 # Probabilistic polygonal chain generation and manipulation
-# Author: Kevin Jin
+# Authors: Kevin Jin, Qiwei Li
 
 #' Generate a random closed polygonal chain
 #'
@@ -55,6 +55,19 @@ validate <- function(chain) {
   return(is_chain)
 }
 
+#' Calculate the sum of the interior angles of a closed polygonal chain
+#'
+#' @description
+#' Given a closed polygonal chain, return the sum of the interior angles.
+#'
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
+#' of the polygonal chain.
+#'
+#' @return A numeric containing the sum of the interior angles of the chain.
+sum_interior_angles <- function(chain) {
+  return((nrow(chain) - 2) * 180)
+}
+
 #' Calculate the angle between three points
 #'
 #' @description
@@ -96,15 +109,6 @@ three_point_angle <- function(points) {
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
-  # pc <- generate(4) # Generate a quadrilateral chain
-  # plot(pc, type = "l") # Draw the quadrilateral chain
-  # text(pc[1:4,], labels = 1:4) # Label vertices
-  # n <- nrow(pc) # Number of vertices (k + 1 due to closedness)
-  # new_pc <- rbind(pc[n - 1, ], pc) # Remove first vertex
-  # angle <- rep(NA, n - 1) # Create empty angle vector of length k
-  # for (i in 2:n) { # Calculate angle vectors over chain
-  #   angle[i - 1] <- three_point_angle(new_pc[(i - 1):(i + 1), ])
-  # }
   if (validate(chain)) {
     # Number of vertices (k) + 1 due to closedness
     n <- nrow(chain)
