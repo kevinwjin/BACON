@@ -113,33 +113,32 @@ three_point_angle <- function(points) {
 #'
 #' @return A logical value indicating whether the triangular orientation is 
 #' clockwise (TRUE) or counterclockwise (FALSE).
-orientation <- function(points, chain) {
+sorting_angles <- function(points, chain) {
+  #points <- rbind(points, points[1, ])
+  
+  # Compute the centroid of the chain
   centroid <- rowSums(t(chain)) / nrow(chain)
   
-  # Sorting angles for points
-  sorting_angles_points <- matrix(nrow = nrow(points), ncol = 1)
+  # Compute angle sweep between chain centroid and each triangle point
+  sorting_angles <- matrix(nrow = nrow(points), ncol = 1)
   for (n in seq_len(nrow(points))) {
     dist <- points[n, ] - centroid
-    sorting_angles_points[n] <- atan2(dist[2], dist[1])
+    sorting_angles[n] <- atan2(dist[2], dist[1])
   }
   
-  # Sorting angles for whole chain
-  sorting_angles_chain <- matrix(nrow = nrow(chain), ncol = 1)
-  for (n in seq_len(nrow(chain))) {
-    dist <- chain[n, ] - centroid
-    sorting_angles_chain[n] <- atan2(dist[2], dist[1])
-  }
+  return(sorting_angles)
+}
+
+orientation <- function(points, chain) {
+  #points <- rbind(points, points[1, ])
   
-  # If sorting angles are descending
-  if(is.unsorted(sorting_angles_points) == TRUE) { 
-    clockwise <- TRUE # The orientation is clockwise
-  # If sorting angles are not descending but you are at the end of the chain
-  } else if (is.unsorted(sorting_angles_points) == FALSE && 
-                 sorting_angles_points[length(sorting_angles_points)] == sorting_angles_chain[1]) { 
-    clockwise <- TRUE # The orientation is clockwise 
-  # If sorting angles are not descending
-  } else if (is.unsorted(sorting_angles_points) == FALSE) {
-    clockwise <- FALSE # The orientation is counterclockwise
+  decreasing <- is.unsorted(sorting_angles(points, chain))
+  
+  if (decreasing == TRUE) {
+    clockwise <- TRUE
+  } else if ((decreasing == FALSE) && 
+             (points[nrow(points), ] == shape[nrow(shape), ])) {
+    clockwise <- TRUE
   } else {
     clockwise <- FALSE
   }
