@@ -6,13 +6,14 @@ set.seed(13579)
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
 #### Test shape generation ####
-k <- 10
+k <- 5
 shape <- generate(k = k)
-sum_interior_angles(shape)
-sum(get_interior_angles(shape))
-sum(get_side_lengths(shape))
 plot(shape, type = "l")
 text(shape[1:nrow(shape), ], labels = 1:nrow(shape))
+sum_interior_angles(shape)
+sum(get_interior_angles(shape))
+get_interior_angles(shape)
+get_side_lengths(shape)
 #polygon(jitter(shape, random = c("angles"), factor = 0.01))
 polygon(translate(shape, x = -0.5, y = 1))
 polygon(dilate(shape, factor = 0.5))

@@ -27,6 +27,7 @@ generate <- function(k = 3, min = 0, max = 1) {
     dist <- chain[n, ] - centroid
     sorting_angles[n] <- atan2(dist[2], dist[1])
   }
+  # Vertices will have clockwise order
   chain <- chain[order(sorting_angles, decreasing = TRUE), ]
   
   # Repeat first row at end to form closed chain
@@ -40,10 +41,10 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' @description
 #' Determines if the given chain of coordinates is a polygonal chain or not
 #'
-#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
-#' of the polygonal chain.
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
 #'
-#' @return Boolean value indicating whether the given chain is a polygonal
+#' @return A logical value indicating whether the given chain is a polygonal
 #' chain.
 validate <- function(chain) {
   # Order of vertices must remain the same and might be disturbed after jitter
@@ -60,12 +61,12 @@ validate <- function(chain) {
 #' @description
 #' Given a closed polygonal chain, return the sum of the interior angles.
 #'
-#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
-#' of the polygonal chain.
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
 #'
 #' @return A numeric containing the sum of the interior angles of the chain.
 sum_interior_angles <- function(chain) {
-  return((nrow(chain) - 2) * 180)
+  return((nrow(chain) - 3) * 180)
 }
 
 #' Calculate the angle between three points
@@ -74,7 +75,7 @@ sum_interior_angles <- function(chain) {
 #' Given a set of three points, calculate the angle between them using the 
 #' Law of Cosines.
 #'
-#' @param chain A 3 x 2 matrix containing the x-y coordinates of the vertices
+#' @param points A 3 x 2 matrix containing the x-y coordinates of the vertices
 #' of three points.
 #'
 #' @return A numeric containing the angle, in degrees, between the three points.
@@ -95,6 +96,55 @@ three_point_angle <- function(points) {
                   (2 * sqrt(x1x2s + y1y2s) * sqrt(x2x3s + y2y3s)))
   
   return(angle * (180 / pi))
+}
+
+#' Return the triangular orientation of three points in a polygonal chain
+#'
+#' @description
+#' Given a subset of three points within a clockwise polygonal chain, close the
+#' chain by drawing a third line and determine the orientation of the resulting
+#' triangle.
+#'
+#' @param points A 3 x 2 matrix containing the x-y coordinates of the vertices
+#' of three points.
+#' 
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
+#'
+#' @return A logical value indicating whether the triangular orientation is 
+#' clockwise (TRUE) or counterclockwise (FALSE).
+orientation <- function(points, chain) {
+  centroid <- rowSums(t(chain)) / nrow(chain)
+  
+  # Sorting angles for points
+  sorting_angles_points <- matrix(nrow = nrow(points), ncol = 1)
+  for (n in seq_len(nrow(points))) {
+    dist <- points[n, ] - centroid
+    sorting_angles_points[n] <- atan2(dist[2], dist[1])
+  }
+  
+  # Sorting angles for whole chain
+  sorting_angles_chain <- matrix(nrow = nrow(chain), ncol = 1)
+  for (n in seq_len(nrow(chain))) {
+    dist <- chain[n, ] - centroid
+    sorting_angles_chain[n] <- atan2(dist[2], dist[1])
+  }
+  
+  # If sorting angles are descending
+  if(is.unsorted(sorting_angles_points) == TRUE) { 
+    clockwise <- TRUE # The orientation is clockwise
+  # If sorting angles are not descending but you are at the end of the chain
+  } else if (is.unsorted(sorting_angles_points) == FALSE && 
+                 sorting_angles_points[length(sorting_angles_points)] == sorting_angles_chain[1]) { 
+    clockwise <- TRUE # The orientation is clockwise 
+  # If sorting angles are not descending
+  } else if (is.unsorted(sorting_angles_points) == FALSE) {
+    clockwise <- FALSE # The orientation is counterclockwise
+  } else {
+    clockwise <- FALSE
+  }
+  
+  return(clockwise)
 }
 
 #' Calculate the interior angles of a closed polygonal chain
@@ -121,7 +171,11 @@ get_interior_angles <- function(chain) {
     
     # Calculate angle vectors over chain
     for (i in 2:n) { 
-      angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
+      if (orientation(chain[(i - 1):(i + 1), ], chain)) {
+        angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
+      } else {
+        angle[i - 1] <- 360 - three_point_angle(chain[(i - 1):(i + 1), ])
+      }
     }
   } else {
     stop("Argument is not a closed polygonal chain.")
