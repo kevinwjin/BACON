@@ -1,4 +1,4 @@
-# Execution script (data generation, model testing)
+# Execution script
 # Author: Kevin Jin
 
 #### Preparation ####
