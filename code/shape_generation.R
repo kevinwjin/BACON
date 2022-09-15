@@ -114,7 +114,10 @@ three_point_angle <- function(points) {
 #' @return A logical value indicating whether the triangular orientation is 
 #' clockwise (TRUE) or counterclockwise (FALSE).
 sorting_angles <- function(points, chain) {
-  #points <- rbind(points, points[1, ])
+  # If the given points are not the chain itself, draw triangle around the points
+  if (!identical(points, chain)) {
+    points <- rbind(points, points[1, ])
+  }
   
   # Compute the centroid of the chain
   centroid <- rowSums(t(chain)) / nrow(chain)
@@ -130,8 +133,8 @@ sorting_angles <- function(points, chain) {
 }
 
 orientation <- function(points, chain) {
-  #points <- rbind(points, points[1, ])
-  
+  # Clockwise = descending sorting angles
+  # Counterclockwise = ascending sorting angles
   decreasing <- is.unsorted(sorting_angles(points, chain))
   
   if (decreasing == TRUE) {
@@ -169,12 +172,15 @@ get_interior_angles <- function(chain) {
     angle <- rep(NA, n - 1)
     
     # Calculate angle vectors over chain
-    for (i in 2:n) { 
-      if (orientation(chain[(i - 1):(i + 1), ], chain)) {
-        angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
-      } else {
-        angle[i - 1] <- 360 - three_point_angle(chain[(i - 1):(i + 1), ])
-      }
+    # for (i in 2:n) { 
+    #   if (orientation(chain[(i - 1):(i + 1), ], chain)) {
+    #     angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
+    #   } else {
+    #     angle[i - 1] <- 360 - three_point_angle(chain[(i - 1):(i + 1), ])
+    #   }
+    # }
+    for (i in 2:n) {
+      angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
     }
   } else {
     stop("Argument is not a closed polygonal chain.")

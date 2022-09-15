@@ -2,28 +2,24 @@
 # Author: Kevin Jin
 
 #### Preparation ####
-set.seed(13579)
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
 #### Test shape generation ####
 k <- 5
 shape <- generate(k = k)
 plot(shape, type = "l")
-text(shape[1:nrow(shape), ], labels = 1:nrow(shape))
+text(shape, labels = 1:nrow(shape)) # Label vertices in order
+lines(x = c(shape[2, 1], shape[4, 1]), # Triangulate acute angle
+      y = c(shape[2, 2],shape[4, 2]))
+lines(x = c(shape[5, 1], shape[2, 1]), # Triangulate reflex angle
+      y = c(shape[5, 2],shape[2, 2]))
 sum_interior_angles(shape)
 sum(get_interior_angles(shape))
-get_interior_angles(shape)
-get_side_lengths(shape)
-#polygon(jitter(shape, random = c("angles"), factor = 0.01))
-polygon(translate(shape, x = -0.5, y = 1))
-polygon(dilate(shape, factor = 0.5))
-polygon(reflect(shape, direction = c("vertical")))
-polygon(rotate(shape, angle = 180, clockwise = FALSE))
 
 #### Generate data: Two different shapes, 30 each with slight variations ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
 n <- 60 # Total number of shapes
-k <- 3 # Number of vertices
+k <- 4 # Number of vertices
 z <- 2 # Pre-specified number of clusters
 
 # Generate first shape
