@@ -1,4 +1,4 @@
-# CAPoly: Bayesian Cluster Analysis of N-gons via a Double Dirichlet Mixture Model
+# CAPoly: Bayesian Cluster Analysis of Polygons via a Double Dirichlet Mixture Model
 
 ## Introduction
 `CAPoly` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. interior angles abd relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
