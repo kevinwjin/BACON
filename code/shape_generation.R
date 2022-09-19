@@ -172,10 +172,14 @@ get_interior_angles <- function(chain) {
         angle[i - 1] <- tp_angle(a_chain[(i - 1):(i + 1), ])
       }
     }
+    
+    # Normalize interior angles by the total to get relative interior angle
+    angle <- angle / sum(angle)
+    
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
-  return(round(angle))
+  return(angle)
 }
 
 #' Calculate the relative side lengths of a closed polygonal chain

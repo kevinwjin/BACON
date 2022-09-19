@@ -9,13 +9,12 @@ k <- 50
 chain <- generate(k = k)
 plot(chain, type = "l")
 text(chain, labels = 1:nrow(chain)) # Label vertices in order
-sum_interior_angles(chain)
-sum(get_interior_angles(chain))
+get_interior_angles(chain)
 
 #### Generate data: Two different shapes, 30 each with slight variations ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
 n <- 60 # Total number of shapes
-k <- 4 # Number of vertices
+k <- 5 # Number of vertices
 z <- 2 # Pre-specified number of clusters
 
 # Generate first shape
