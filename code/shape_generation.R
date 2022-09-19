@@ -79,7 +79,7 @@ sum_interior_angles <- function(chain) {
 #' of three points.
 #'
 #' @return A numeric containing the angle, in degrees, between the three points.
-three_point_angle <- function(points) {
+tp_angle <- function(points) {
   pointA <- points[1, ]
   pointB <- points[2, ]
   pointC <- points[3, ]
@@ -98,55 +98,41 @@ three_point_angle <- function(points) {
   return(angle * (180 / pi))
 }
 
-#' Return the triangular orientation of three points in a polygonal chain
+#' Check whether a vertex produces a reflex angle in a closed polygonal chain
 #'
 #' @description
-#' Given a subset of three points within a clockwise polygonal chain, close the
-#' chain by drawing a third line and determine the orientation of the resulting
-#' triangle.
+#' Given the index of a vertex within a closed polygonal chain and the chain 
+#' itself, close the chain without the vertex by drawing a third line and 
+#' determine whether the given vertex is inside or outside of the resultant 
+#' new polygonal chain.
 #'
-#' @param points A 3 x 2 matrix containing the x-y coordinates of the vertices
-#' of three points.
+#' @param index A numeric containing the index of the vertex within the chain.
 #' 
 #' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the polygonal chain.
 #'
-#' @return A logical value indicating whether the triangular orientation is 
-#' clockwise (TRUE) or counterclockwise (FALSE).
-sorting_angles <- function(points, chain) {
-  # If the given points are not the chain itself, draw triangle around the points
-  if (!identical(points, chain)) {
-    points <- rbind(points, points[1, ])
-  }
+#' @return A logical value indicating whether the given vertex is in the
+#' polygonal chain.
+is_reflex <- function(index, chain) {
+  require(sf)
   
-  # Compute the centroid of the chain
-  centroid <- rowSums(t(chain)) / nrow(chain)
+  # Get offending vertex from the index
+  point <- chain[index, ]
+    
+  # Cast the offending vertex to sf point object
+  point_sf <- st_as_sf(data.frame(t(point)), coords = c("x", "y"))
   
-  # Compute angle sweep between chain centroid and each triangle point
-  sorting_angles <- matrix(nrow = nrow(points), ncol = 1)
-  for (n in seq_len(nrow(points))) {
-    dist <- points[n, ] - centroid
-    sorting_angles[n] <- atan2(dist[2], dist[1])
-  }
+  # Create a new polygonal chain without the offending vertex
+  new_chain <- chain[-index, ]
+  new_chain <- rbind(new_chain, new_chain[1, ]) # Duplicate first vertex
   
-  return(sorting_angles)
-}
+  # Cast the new polygonal chain to sf polygon object
+  chain_sf <- st_sfc(st_polygon(list(new_chain)))
 
-orientation <- function(points, chain) {
-  # Clockwise = descending sorting angles
-  # Counterclockwise = ascending sorting angles
-  decreasing <- is.unsorted(sorting_angles(points, chain))
+  # Determine whether offending vertex is inside the new polygonal chain
+  is_reflex <- st_within(point_sf, chain_sf, sparse = FALSE)[, 1]
   
-  if (decreasing == TRUE) {
-    clockwise <- TRUE
-  } else if ((decreasing == FALSE) && 
-             (points[nrow(points), ] == shape[nrow(shape), ])) {
-    clockwise <- TRUE
-  } else {
-    clockwise <- FALSE
-  }
-  
-  return(clockwise)
+  return(is_reflex)
 }
 
 #' Calculate the interior angles of a closed polygonal chain
@@ -162,25 +148,29 @@ orientation <- function(points, chain) {
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
   if (validate(chain)) {
-    # Number of vertices (k) + 1 due to closedness
+    # Number of vertices (k) + 1 due since chain is closed
     n <- nrow(chain)
     
-    # Remove first vertex
-    chain <- rbind(chain[n - 1, ], chain)
-    
-    # Create empty angle vector of length k
+    # Loop over entire chain, checking each vertex for reflex angle
+    reflex <- c()
+    for (i in 1:n) {
+      reflex <- c(reflex, is_reflex(i, chain))
+    }
+
+    # Create empty vector of length k to store interior angles
     angle <- rep(NA, n - 1)
     
-    # Calculate angle vectors over chain
-    # for (i in 2:n) { 
-    #   if (orientation(chain[(i - 1):(i + 1), ], chain)) {
-    #     angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
-    #   } else {
-    #     angle[i - 1] <- 360 - three_point_angle(chain[(i - 1):(i + 1), ])
-    #   }
-    # }
+    # Add penultimate vertex to first position for looping purposes
+    a_chain <- rbind(chain[n - 1, ], chain)
+    a_reflex <- append(reflex[n - 1], reflex)
+    
+    # Loop over entire chain, calculating the interior angles
     for (i in 2:n) {
-      angle[i - 1] <- three_point_angle(chain[(i - 1):(i + 1), ])
+      if (a_reflex[i]) { # Vertex produces a reflex angle; take the complement
+        angle[i - 1] <- (360 - tp_angle(a_chain[(i - 1):(i + 1), ]))
+      } else { # Vertex does not produce a reflex angle
+        angle[i - 1] <- tp_angle(a_chain[(i - 1):(i + 1), ])
+      }
     }
   } else {
     stop("Argument is not a closed polygonal chain.")

@@ -6,15 +6,11 @@ source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
 #### Test shape generation ####
 k <- 5
-shape <- generate(k = k)
-plot(shape, type = "l")
-text(shape, labels = 1:nrow(shape)) # Label vertices in order
-lines(x = c(shape[2, 1], shape[4, 1]), # Triangulate acute angle
-      y = c(shape[2, 2],shape[4, 2]))
-lines(x = c(shape[5, 1], shape[2, 1]), # Triangulate reflex angle
-      y = c(shape[5, 2],shape[2, 2]))
-sum_interior_angles(shape)
-sum(get_interior_angles(shape))
+chain <- generate(k = k)
+plot(chain, type = "l")
+text(chain, labels = 1:nrow(chain)) # Label vertices in order
+sum_interior_angles(chain)
+sum(get_interior_angles(chain))
 
 #### Generate data: Two different shapes, 30 each with slight variations ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
