@@ -5,7 +5,7 @@
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
 #### Test shape generation ####
-k <- 5
+k <- 50
 chain <- generate(k = k)
 plot(chain, type = "l")
 text(chain, labels = 1:nrow(chain)) # Label vertices in order
