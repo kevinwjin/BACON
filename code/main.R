@@ -103,12 +103,54 @@ colnames(angles) <- 1:50
 colnames(side_lengths) <- 1:50
 
 #### Load MPEG-7 data ####
+library(SAFARI) # Image processing
+library(dplyr) # Data handling
+library(parallel)
+
 # Load all images in the folder
+# Retrieve list of all images (Set directory to image folder
+setwd("~/Documents/Programming/Repositories/SAFARI-cluster-analysis/data/MPEG-7/images")
+file_list <- dir(pattern = "gif$") # Choose appropriate image extension
 
 # Convert to polygonal chains
+extract_chains <- function(img) {
+  if (img == "Glas-12.gif") { # Special case of inverted image in MPEG-7
+    this_img <- read.image(img, invert = TRUE)
+  } else {
+    this_img <- read.image(img)
+  }
+  img_segs <- binary.segmentation(this_img, id = c(""), filter = 150, k = 3,
+                                  categories = c("geometric", "boundary",
+                                                 "topological"))
+  chains <- data.frame(img_segs$plg.chains$`1`)
+  return(chains)
+}
+
+# Process all images in parallel
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, varlist = c("read.image", "binary.segmentation"))
+chains <- parSapply(cl, file_list, FUN = extract_chains)
+stopCluster(cl)
 
 # Construct matrices for data
+angles <- matrix(nrow = nrow(chains), 
+                 ncol = 3000, # Uncertain maximum number of vertices
+                 byrow = TRUE)
+side_lengths <- matrix(nrow = nrow(chains), 
+                       ncol = 3000, 
+                       byrow = TRUE)
 
 # Extract data
+chains <- t(chains)
+for (i in 1:length(chains)) {
+  chain <- cbind(unlist(chains[i, "X"]), unlist(chains[i, "Y"]))
+  colnames(chain) <- c("x", "y")
+  angles[i, ] <- get_interior_angles(chain)
+  side_lengths[i, ] <- get_side_lengths(chain)
+}
 
 # Name data rows and columns
+rownames(angles) <- rownames(chains)
+rownames(side_lengths) <- rownames(chains)
+colnames(angles) <- 1:3000
+colnames(side_lengths) <- 1:3000
