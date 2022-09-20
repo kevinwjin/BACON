@@ -134,16 +134,17 @@ stopCluster(cl)
 
 # Construct matrices for data
 angles <- matrix(nrow = nrow(chains), 
-                 ncol = 3000, # Uncertain maximum number of vertices
+                 ncol = 100, # Uncertain maximum number of vertices
                  byrow = TRUE)
 side_lengths <- matrix(nrow = nrow(chains), 
-                       ncol = 3000, 
+                       ncol = 100, 
                        byrow = TRUE)
 
 # Extract data
 chains <- t(chains)
 for (i in 1:length(chains)) {
   chain <- cbind(unlist(chains[i, "X"]), unlist(chains[i, "Y"]))
+  chain <- chain[seq(1, dim(chain)[1], length.out = (50 + 1)), ] # Subsample
   colnames(chain) <- c("x", "y")
   angles[i, ] <- get_interior_angles(chain)
   side_lengths[i, ] <- get_side_lengths(chain)
