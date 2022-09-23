@@ -27,8 +27,9 @@ generate <- function(k = 3, min = 0, max = 1) {
     dist <- chain[n, ] - centroid
     sorting_angles[n] <- atan2(dist[2], dist[1])
   }
-  # Vertices will have clockwise order
-  chain <- chain[order(sorting_angles, decreasing = TRUE), ]
+  
+  # Vertices will have anticlockwise order
+  chain <- chain[order(sorting_angles, decreasing = FALSE), ]
   
   # Repeat first row at end to form closed chain
   chain <- rbind(chain, chain[1, ])
@@ -36,7 +37,7 @@ generate <- function(k = 3, min = 0, max = 1) {
   return(chain)
 }
 
-#' Validate whether a polygonal chain is closed
+#' Check whether a polygonal chain is closed
 #'
 #' @description
 #' Determines if the given chain of coordinates is a polygonal chain or not
@@ -46,14 +47,33 @@ generate <- function(k = 3, min = 0, max = 1) {
 #'
 #' @return A logical value indicating whether the given chain is a polygonal
 #' chain.
-validate <- function(chain) {
+is_closed <- function(chain) {
   # Order of vertices must remain the same and might be disturbed after jitter
   if (identical(chain[1, ], chain[nrow(chain), ])) {
-    is_chain <- TRUE
+    is_closed <- TRUE
   } else {
-    is_chain <- FALSE
+    is_closed <- FALSE
   }
-  return(is_chain)
+  return(is_closed)
+}
+
+#' Reverse the orientation of a closed polygonal chain
+#'
+#' @description
+#' Reverse the orientation, or matrix row order, of a closed polygonal chain.
+#'
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
+#'
+#' @return The same polygonal chain, except now in reverse orientation.
+reverse_orientation <- function(chain) {
+  if (is_closed(chain)) {
+    # Reverse clockwise orientation
+    chain <- chain[nrow(chain):1, ]
+  } else {
+    stop("Argument is not a closed polygonal chain.")
+  }
+  return(chain)
 }
 
 #' Calculate the sum of the interior angles of a closed polygonal chain
@@ -79,7 +99,7 @@ sum_interior_angles <- function(chain) {
 #' of three points.
 #'
 #' @return A numeric containing the angle, in degrees, between the three points.
-tp_angle <- function(points) {
+three_point_angle <- function(points) {
   pointA <- points[1, ]
   pointB <- points[2, ]
   pointC <- points[3, ]
@@ -147,7 +167,7 @@ is_reflex <- function(index, chain) {
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
-  if (validate(chain)) {
+  if (is_closed(chain)) {
     # Number of vertices (k) + 1 due since chain is closed
     n <- nrow(chain)
     
@@ -167,9 +187,9 @@ get_interior_angles <- function(chain) {
     # Loop over entire chain, calculating the interior angles
     for (i in 2:n) {
       if (a_reflex[i]) { # Vertex produces a reflex angle; take the complement
-        angle[i - 1] <- (360 - tp_angle(a_chain[(i - 1):(i + 1), ]))
+        angle[i - 1] <- (360 - three_point_angle(a_chain[(i - 1):(i + 1), ]))
       } else { # Vertex does not produce a reflex angle
-        angle[i - 1] <- tp_angle(a_chain[(i - 1):(i + 1), ])
+        angle[i - 1] <- three_point_angle(a_chain[(i - 1):(i + 1), ])
       }
     }
     
@@ -194,7 +214,7 @@ get_interior_angles <- function(chain) {
 #' @return A vector of length k containing the side lengths of the polygonal 
 #' chain.
 get_side_lengths <- function(chain) {
-  if (validate(chain)) {
+  if (is_closed(chain)) {
     # Eliminate repeated row for now
     chain <- chain[-nrow(chain), ]
     
@@ -266,7 +286,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
       }
       
       # If jittered output is not a chain, then re-jitter at most max_loops times
-      if (validate(chain) == FALSE || loops == max_loops) {
+      if (is_closed(chain) == FALSE || loops == max_loops) {
         if (loops == max_loops) {
           warning("Could not create valid chain in 10 attempts; please lower the jitter factor.")
         }

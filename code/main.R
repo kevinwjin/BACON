@@ -5,7 +5,7 @@
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
 #### Test shape generation ####
-k <- 50
+k <- 20
 chain <- generate(k = k)
 plot(chain, type = "l")
 text(chain, labels = 1:nrow(chain)) # Label vertices in order
@@ -66,15 +66,6 @@ for (i in seq(1, n * (k + 1), by = (k + 1))) {
 }
 
 #### Load ADHD-200 data ####
-# Test data extraction
-chain <- plg.chains[[1]] # Unlist polygonal chain
-colnames(chain) <- c("x", "y") # Rename columns, otherwise sf will complain
-k <- nrow(chain) - 1 # Number of vertices
-plot(chain, type = "l")
-text(chain, labels = 1:nrow(chain))
-get_interior_angles(chain)
-get_side_lengths(chain)
-
 # Load all chains in the folder
 setwd("~/Documents/Programming/Repositories/CAPoly/data/adhd_200/shapes/polygonal")
 file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
@@ -82,6 +73,12 @@ chains <- lapply(file_names, function(x) {
   load(file = x)
   mget(ls()[ls()!= "filename"])
 })
+
+# Test data extraction
+chain <- chains[[1]]$plg.chains$`1` # Unlist polygonal chain
+colnames(chain) <- c("x", "y") # Rename columns, otherwise sf will complain
+plot(chain, type = "l")
+text(chain, labels = 1:nrow(chain))
 
 # Construct matrices for data
 angles <- matrix(nrow = length(chains), ncol = 50, byrow = TRUE)
