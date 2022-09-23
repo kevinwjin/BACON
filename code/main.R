@@ -1,17 +1,17 @@
 # Execution script
 # Author: Kevin Jin
 
-#### Preparation ####
+#### Load data simulation functions ####
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
-#### Test shape generation ####
+#### Simulate data generation ####
 k <- 20
 chain <- generate(k = k)
 plot(chain, type = "l")
 text(chain, labels = 1:nrow(chain)) # Label vertices in order
 get_interior_angles(chain)
 
-#### Generate data: Two different shapes, 30 each with slight variations ####
+#### Simulated data: Two shapes, 30 each ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
 n <- 60 # Total number of shapes
 k <- 5 # Number of vertices
@@ -64,40 +64,6 @@ for (i in seq(1, n * (k + 1), by = (k + 1))) {
   s[row, ] <- get_side_lengths(shapes[i:(i + k), ])
   row <- row + 1
 }
-
-#### Load ADHD-200 data ####
-# Load all chains in the folder
-setwd("~/Documents/Programming/Repositories/CAPoly/data/adhd_200/shapes/polygonal")
-file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
-chains <- lapply(file_names, function(x) {
-  load(file = x)
-  mget(ls()[ls()!= "filename"])
-})
-
-# Test data extraction
-chain <- chains[[1]]$plg.chains$`1` # Unlist polygonal chain
-colnames(chain) <- c("x", "y") # Rename columns, otherwise sf will complain
-plot(chain, type = "l")
-text(chain, labels = 1:nrow(chain))
-
-# Construct matrices for data
-angles <- matrix(nrow = length(chains), ncol = 50, byrow = TRUE)
-side_lengths <- matrix(nrow = length(chains), ncol = 50, byrow = TRUE)
-
-# Extract data
-for (i in 1:length(chains)) {
-  chain <- chains[[i]]$plg.chains$`1` # Extract chain
-  colnames(chain) <- c("x", "y")
-  angles[i, ] <- get_interior_angles(chain)
-  side_lengths[i, ] <- get_side_lengths(chain)
-}
-
-# Name data rows and columns
-names <- sapply(1:length(chains), function(i) chains[[i]]$id[2])
-rownames(angles) <- names
-rownames(side_lengths) <- names
-colnames(angles) <- 1:50
-colnames(side_lengths) <- 1:50
 
 #### Load MPEG-7 data ####
 library(SAFARI) # Image processing
@@ -152,3 +118,56 @@ rownames(angles) <- rownames(chains)
 rownames(side_lengths) <- rownames(chains)
 colnames(angles) <- 1:3000
 colnames(side_lengths) <- 1:3000
+
+
+#### Load ADHD-200 data ####
+# Load all chains in the folder
+setwd("~/Documents/Programming/Repositories/CAPoly/data/adhd_200/shapes/polygonal")
+file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
+chains <- lapply(file_names, function(x) {
+  load(file = x)
+  mget(ls()[ls()!= "filename"])
+})
+
+# Test data extraction
+chain <- chains[[1]]$plg.chains$`1` # Unlist polygonal chain
+colnames(chain) <- c("x", "y") # Rename columns, otherwise sf will complain
+plot(chain, type = "l")
+text(chain, labels = 1:nrow(chain))
+
+# Construct matrices for data
+angles <- matrix(nrow = length(chains), ncol = 50, byrow = TRUE)
+side_lengths <- matrix(nrow = length(chains), ncol = 50, byrow = TRUE)
+
+# Extract data
+for (i in 1:length(chains)) {
+  chain <- chains[[i]]$plg.chains$`1` # Extract chain
+  colnames(chain) <- c("x", "y")
+  angles[i, ] <- get_interior_angles(chain)
+  side_lengths[i, ] <- get_side_lengths(chain)
+}
+
+# Name data rows and columns
+names <- sapply(1:length(chains), function(i) chains[[i]]$id[2])
+rownames(angles) <- names
+rownames(side_lengths) <- names
+colnames(angles) <- 1:50
+colnames(side_lengths) <- 1:50
+
+
+#### ADHD-200 data analysis ####
+
+# Load clinical information (cluster labels)
+# patient.id: uninformative
+# gender (discrete, binary): 1 = female 
+#                            0 = male
+# age (continuous)
+# phenotype (discrete): 0 = typically developing children
+#                       1 = 
+#                       2 = 
+#                       3 =
+
+# Centered log-ratio transform
+
+# PCA dimensional reduction
+
