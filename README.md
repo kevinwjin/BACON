@@ -29,7 +29,7 @@ devtools:install_github("kevinwjin/CAPoly")
 
 ## Prerequisites
 * `Rcpp` - Faster MCMC approximation
-* `sf` - Polygon handling when generating simulated data
+* `sf` - Used in interior angle calculation
 
 ## Examples
 *(under development)*
