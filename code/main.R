@@ -4,71 +4,106 @@
 #### Load data simulation functions ####
 source("~/Documents/Programming/Repositories/bsclust/code/shape_generation.R")
 
-#### Simulate data generation ####
+#### Test data generation ####
 k <- 20
 chain <- generate(k = k)
 plot(chain, type = "l")
 text(chain, labels = 1:nrow(chain)) # Label vertices in order
 get_interior_angles(chain)
 
-#### Simulated data: Two shapes, 30 each ####
+#### Generate simulated data ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
-n <- 60 # Total number of shapes
-k <- 5 # Number of vertices
-z <- 2 # Pre-specified number of clusters
+n <- 120 # Total number of shapes
+k <- 10 # Number of vertices
+z <- 4 # Pre-specified number of clusters
 
 # Generate first shape
 shape_1 <- generate(k = k)
-# Replicate n / 2 times (half of the total)
-shapes_1 <- do.call(rbind, replicate(n / 2, shape_1, simplify = FALSE))
+# Replicate n / z times
+shapes_1 <- do.call(rbind, replicate(n / z, shape_1, simplify = FALSE))
 # Apply jitter (each k + 1 rows is a shape)
-for (i in seq(1, (n / 2 * (k + 1)),
-              by = (k + 1))) {
-  shapes_1[i:(i + k), ] <- jitter(shapes_1[i:(i + k), ],
-                                        random = c("vertices"),
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_1[i:(i + k), ] <- jitter(shapes_1[i:(i + k), ], random = c("vertices"),
                                         factor = 0.01)
 }
-# Generate second shape (z = 2 clusters)
-shape_2 <- generate(k = k)
-# Replicate n / 2 times (half of the total)
-shapes_2 <- do.call(rbind, replicate(n / 2, shape_2, simplify = FALSE))
-# Apply jitter (each k + 1 rows is a shape)
-for (i in seq(1, (n / 2 * (k + 1)), 
-              by = (k + 1))) {
-  shapes_2[i:(i + k), ] <- jitter(shapes_2[i:(i + k), ],
-                                        random = c("vertices"),
-                                        factor = 0.01)
-}
-# Combine into 1 matrix
-shapes <- rbind(shapes_1, shapes_2)
 
-# Plot shapes - draw one shape per plot
-for (i in seq(1, (n / 2 * (k + 1)), 
-              by = (k + 1))) {
-  plot(shapes[i:(i + k), ], type = "l")
+# Generate second shape
+shape_2 <- generate(k = k)
+# Replicate n / z times
+shapes_2 <- do.call(rbind, replicate(n / z, shape_2, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_2[i:(i + k), ] <- jitter(shapes_2[i:(i + k), ], random = c("vertices"),
+                                        factor = 0.01)
 }
+
+# Generate third shape
+shape_3 <- generate(k = k)
+# Replicate n / z times
+shapes_3 <- do.call(rbind, replicate(n / z, shape_3, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_3[i:(i + k), ] <- jitter(shapes_3[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.01)
+}
+
+# Generate fourth shape
+shape_4 <- generate(k = k)
+# Replicate n / z times
+shapes_4 <- do.call(rbind, replicate(n / z, shape_4, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_4[i:(i + k), ] <- jitter(shapes_4[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.01)
+}
+
+# Combine into 1 matrix
+shapes <- rbind(shapes_1, shapes_2, shapes_3, shapes_4)
 
 ## Step 2: Extract the angle vectors of the shapes (data to be clustered)
 p <- k # Number of categories (length of angle vector)
-x <- matrix(nrow = n, ncol = p, byrow = TRUE) # Data (angle vectors)
+angles <- matrix(nrow = n, ncol = p, byrow = TRUE)
 row <- 1 # Row counter
 for (i in seq(1, n * (k + 1), by = (k + 1))) {
-  x[row, ] <- get_interior_angles(shapes[i:(i + k), ])
+  angles[row, ] <- get_interior_angles(shapes[i:(i + k), ])
   row <- row + 1
 }
 
 ## Step 3: Extract side lengths of the shapes (data to be clustered)
-s <- matrix(nrow = n, ncol = p, byrow = TRUE) # Data (side length vectors)
+side_lengths <- matrix(nrow = n, ncol = p, byrow = TRUE)
 row <- 1 # Row counter
 for (i in seq(1, n * (k + 1), by = (k + 1))) {
-  s[row, ] <- get_side_lengths(shapes[i:(i + k), ])
+  side_lengths[row, ] <- get_side_lengths(shapes[i:(i + k), ])
   row <- row + 1
 }
 
+## Step 3: Data analysis
+# Create cluster labels
+clusters <- c()
+for (i in 1:z) {
+  clusters <- append(clusters, rep.int(i, times = 30))
+}
+
+# PCA dimensional reduction
+require(ggfortify)
+angles <- cbind(angles, clusters)
+autoplot(stats::prcomp(clr(angles[, 1:k])), 
+         data = angles,
+         colour = 'clusters')
+biplot(stats::prcomp(angles[, 1:k]))
+plot(stats::prcomp(angles[, 1:k]), type = 'l')
+
+side_lengths <- cbind(side_lengths, clusters)
+autoplot(stats::prcomp(clr(side_lengths[, 1:k])), 
+         data = angles, 
+         colour = 'clusters')
+biplot(stats::prcomp(side_lengths[, 1:k]))
+plot(stats::prcomp(side_lengths[, 1:k], type = 'l'))
+
 #### Load MPEG-7 data ####
-library(SAFARI) # Image processing
-library(dplyr) # Data handling
-library(parallel)
+require(SAFARI) # Image processing
+require(dplyr) # Data handling
+require(parallel)
 
 # Load all images in the folder
 # Retrieve list of all images (Set directory to image folder
@@ -156,18 +191,50 @@ colnames(side_lengths) <- 1:50
 
 
 #### ADHD-200 data analysis ####
+# Load clinical information (ground truth cluster labels)
+# gender (discrete, binary): 0 = female; 1 = male
+# age (continuous): rounded and discretized by factor()
+# phenotype (discrete): 0 = typically developing children; 1 = ADHD-combined
+#                       2 = ADHD-hyperactive/impulsive; 3 = ADHD-inattentive
 
-# Load clinical information (cluster labels)
-# patient.id: uninformative
-# gender (discrete, binary): 1 = female 
-#                            0 = male
-# age (continuous)
-# phenotype (discrete): 0 = typically developing children
-#                       1 = 
-#                       2 = 
-#                       3 =
+gender <- clinical_info$gender[order(clinical_info$patient.id)]
+age <- factor(round(clinical_info$age[order(clinical_info$patient.id)]))
+phenotype <- clinical_info$phenotype[order(clinical_info$patient.id)]
 
-# Centered log-ratio transform
+# Centered & isometric log-ratio transformation
+require(compositions)
+angles.clr.pca <- prcomp(clr(angles), scale = TRUE)
+autoplot(angles.clr.pca)
 
-# PCA dimensional reduction
+angles.ilr.pca <- prcomp(ilr(angles), scale = TRUE)
+autoplot(angles.ilr.pca)
 
+# PCA dimensional reduction on first 50 columns
+require(ggfortify)
+angles <- cbind(angles, phenotype, age, gender)
+autoplot(stats::prcomp(clr(angles[, 1:50])), 
+         data = angles,
+         colour = 'phenotype')
+autoplot(stats::prcomp(angles[, 1:50]), 
+         data = angles, 
+         colour = 'age')
+autoplot(stats::prcomp(angles[, 1:50]), 
+         data = angles, 
+         colour = 'gender')
+biplot(stats::prcomp(angles[, 1:50]))
+plot(stats::prcomp(angles[, 1:50]), type = 'l')
+
+side_lengths <- cbind(side_lengths, phenotype, age, gender)
+autoplot(stats::prcomp(side_lengths[, 1:50]), 
+         data = angles, 
+         colour = 'phenotype')
+autoplot(stats::prcomp(side_lengths[, 1:50]), 
+         data = angles, 
+         colour = 'age')
+autoplot(stats::prcomp(side_lengths[, 1:50]), 
+         data = angles, 
+         colour = 'gender')
+biplot(stats::prcomp(side_lengths[, 1:50]))
+plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
+
+#### Bijective mapping for angle and side lengths
