@@ -155,14 +155,14 @@ is_reflex <- function(index, chain) {
   return(is_reflex)
 }
 
-#' Calculate the interior angles of a closed polygonal chain
+#' Calculate the relative interior angles of a closed polygonal chain
 #'
 #' @description
 #' If the given chain of coordinates is a closed polygonal chain, 
-#' return a vector of its interior angles.
+#' return a vector of its relative interior angles.
 #'
-#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
-#' of the polygonal chain.
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
 #'
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
@@ -194,7 +194,7 @@ get_interior_angles <- function(chain) {
     }
     
     # Normalize interior angles by the total to get relative interior angle
-    angle <- angle / sum(angle)
+    angle <- compositional(angle, sum(angle))
     
   } else {
     stop("Argument is not a closed polygonal chain.")
@@ -208,8 +208,8 @@ get_interior_angles <- function(chain) {
 #' If the given chain of coordinates is a closed polygonal chain, 
 #' return a vector of its side lengths relative to the perimeter.
 #'
-#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
-#' of the polygonal chain.
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
 #'
 #' @return A vector of length k containing the side lengths of the polygonal 
 #' chain.
@@ -234,12 +234,26 @@ get_side_lengths <- function(chain) {
     }
   
     # Normalize side lengths by the perimeter to get relative length
-    side_lengths <- side_lengths / perimeter
+    side_lengths <- compositional(side_lengths, perimeter)
 
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
   return(c(side_lengths))
+}
+
+#' Normalize a numerical vector by its total to produce its compositional data
+#'
+#' @description
+#' Given a numerical vector, return a vector of its relative compositional data.
+#'
+#' @param data A numeric vector of length k containing data.
+#' @param sum A numeric containing the sum of the vector.
+#'
+#' @return A vector of length k containing compositional data.
+compositional <- function(data, sum) {
+  normalized <- data / sum
+  return(normalized)
 }
 
 #' Add jitter to a polygonal chain
@@ -248,14 +262,14 @@ get_side_lengths <- function(chain) {
 #' output is not a valid polygonal chain, re-jitter a maximum of 10 times 
 #' before giving up.
 #'
-#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the vertices
-#' of the polygonal chain.
+#' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the polygonal chain.
 #' @param random String containing polygon parameter to randomize.
 #' @param factor Floating point number from 0 to 1 exclusive as a percentage
 #' of the perimeter of the polygonal chain to randomize by.
 #'
-#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices of the
-#' polygonal chain.
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices 
+#' of the polygonal chain.
 jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
   if (random == "vertices") {
     loops <- 0 # Jitter loop counter
