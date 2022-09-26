@@ -4,7 +4,7 @@
 `CAPoly` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
 
 ## Installation
-Execute one of the following commands in R, depending on your preference:
+Install CAPoly by one of the following methods, depending on your preference:
 
 ```R
 # Install from The Comprehensive R Archive Network (CRAN)
@@ -35,6 +35,7 @@ devtools:install_github("kevinwjin/CAPoly")
 *(under development)*
 
 ## Contributors
-* [Qiwei Li](https://profiles.utdallas.edu/qiwei.li)
 * [Kevin Jin](https://www.linkedin.com/in/kevin-w-jin/)
 * [Huimin Li](https://www.linkedin.com/in/huimin-li-19789248)
+* [Stephen McKeown](https://personal.utdallas.edu/~sxm190098/)
+* [Qiwei Li](https://sites.google.com/site/liqiwei2000/)
