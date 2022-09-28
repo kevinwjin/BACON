@@ -384,10 +384,16 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
     chain <- (chain - centroid) %*%
       matrix(c(-1, 0, 0, 1), ncol = 2, byrow = TRUE) + centroid
     
+    # For the sf function
+    colnames(chain) <- c("x", "y")
+    
   } else if (direction == "vertical") {
     # Reflect across the x-axis
     chain <- (chain - centroid) %*%
       matrix(c(1, 0, 0, -1), ncol = 2, byrow = TRUE) + centroid
+    
+    # For the sf function
+    colnames(chain) <- c("x", "y")
     
   } else {
     stop("Invalid or no direction provided.\n")
@@ -437,6 +443,9 @@ rotate <- function(chain, angle, clockwise = TRUE) {
   # Add repeated row back
   chain <- t(chain)
   chain <- rbind(chain, chain[1, ])
+  
+  # For the sf function
+  colnames(chain) <- c("x", "y")
   
   # Transpose chain to original form
   return(chain)
