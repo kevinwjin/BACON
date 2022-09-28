@@ -87,18 +87,22 @@ for (i in 1:z) {
 # PCA dimensional reduction
 require(ggfortify)
 angles <- cbind(angles, clusters)
+angles <- as.data.frame(angles)
 autoplot(stats::prcomp(clr(angles[, 1:k])), 
          data = angles,
-         colour = 'clusters')
-biplot(stats::prcomp(angles[, 1:k]))
-plot(stats::prcomp(angles[, 1:k]), type = 'l')
+         colour = factor(clusters),
+         main = 'PCA of Simulated Shapes Relative Interior Angles')
+#biplot(stats::prcomp(angles[, 1:k]))
+#plot(stats::prcomp(angles[, 1:k]), type = 'l')
 
 side_lengths <- cbind(side_lengths, clusters)
+side_lengths <- as.data.frame(side_lengths)
 autoplot(stats::prcomp(clr(side_lengths[, 1:k])), 
          data = angles, 
-         colour = 'clusters')
-biplot(stats::prcomp(side_lengths[, 1:k]))
-plot(stats::prcomp(side_lengths[, 1:k], type = 'l'))
+         colour = factor(clusters),
+         main = 'PCA of Simulated Shapes Relative Side Lengths')
+#biplot(stats::prcomp(side_lengths[, 1:k]))
+#plot(stats::prcomp(side_lengths[, 1:k], type = 'l'))
 
 #### Load MPEG-7 data ####
 require(SAFARI) # Image processing
@@ -212,29 +216,38 @@ autoplot(angles.ilr.pca)
 # PCA dimensional reduction on first 50 columns
 require(ggfortify)
 angles <- cbind(angles, phenotype, age, gender)
+angles <- as.data.frame(angles)
 autoplot(stats::prcomp(clr(angles[, 1:50])), 
          data = angles,
-         colour = 'phenotype')
-autoplot(stats::prcomp(angles[, 1:50]), 
+         colour = factor(phenotype),
+         main = 'PCA of ADHD-200 Relative Interior Angles (Phenotype)')
+autoplot(stats::prcomp(clr(angles[, 1:50])), 
          data = angles, 
-         colour = 'age')
-autoplot(stats::prcomp(angles[, 1:50]), 
+         colour = 'age',
+         main = 'PCA of ADHD-200 Relative Interior Angles (Age)')
+autoplot(stats::prcomp(clr(angles[, 1:50])), 
          data = angles, 
-         colour = 'gender')
+         colour = factor(gender + 1),
+         main = 'PCA of ADHD-200 Relative Interior Angles (Gender)')
 biplot(stats::prcomp(angles[, 1:50]))
 plot(stats::prcomp(angles[, 1:50]), type = 'l')
 
 side_lengths <- cbind(side_lengths, phenotype, age, gender)
-autoplot(stats::prcomp(side_lengths[, 1:50]), 
+side_lengths <- as.data.frame(side_lengths)
+autoplot(stats::prcomp(clr(side_lengths[, 1:50])), 
          data = angles, 
-         colour = 'phenotype')
-autoplot(stats::prcomp(side_lengths[, 1:50]), 
+         colour = factor(phenotype),
+         main = 'PCA of ADHD-200 Relative Side Lengths (Phenotype)')
+autoplot(stats::prcomp(clr(side_lengths[, 1:50])), 
          data = angles, 
-         colour = 'age')
-autoplot(stats::prcomp(side_lengths[, 1:50]), 
+         colour = 'age',
+         main = 'PCA of ADHD-200 Relative Side Lengths (Age)')
+autoplot(stats::prcomp(clr(side_lengths[, 1:50])), 
          data = angles, 
-         colour = 'gender')
+         colour = factor(gender + 1),
+         main = 'PCA of ADHD-200 Relative Side Lengths (Gender)')
 biplot(stats::prcomp(side_lengths[, 1:50]))
 plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
+
 
 #### Bijective mapping for angle and side lengths
