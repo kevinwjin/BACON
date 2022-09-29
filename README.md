@@ -1,18 +1,18 @@
-# CAPoly: Bayesian Cluster Analysis of Polygons via a Double Dirichlet Mixture Model
+# BACON: Bayesian Cluster Analysis of Polygons via a Double Dirichlet Mixture Model
 
 ## Introduction
-`CAPoly` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
+`BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
 
 ## Installation
-Install CAPoly by one of the following methods, depending on your preference:
+Install BACON by one of the following methods, depending on your preference:
 
 ```R
 # Install from The Comprehensive R Archive Network (CRAN)
-install.packages("CAPoly")
+install.packages("BACON")
 
 # Install from GitHub
 if (!require("devtools")) install.packages("devtools")
-devtools:install_github("kevinwjin/CAPoly")
+devtools:install_github("kevinwjin/BACON")
 ```
 ## Usage
 *(under development)*
