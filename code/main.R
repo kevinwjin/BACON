@@ -60,6 +60,12 @@ for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
 # Combine into 1 matrix
 shapes <- rbind(shapes_1, shapes_2, shapes_3, shapes_4)
 
+# Plot shapes - draw one shape per plot
+for (i in seq(1, (n / 2 * (k + 1)), 
+              by = (k + 1))) {
+  plot(shapes[i:(i + k), ], type = "l")
+}
+
 ## Step 2: Extract the angle vectors of the shapes (data to be clustered)
 p <- k # Number of categories (length of angle vector)
 angles <- matrix(nrow = n, ncol = p, byrow = TRUE)
@@ -86,6 +92,7 @@ for (i in 1:z) {
 
 # PCA dimensional reduction
 require(ggfortify)
+require(compositions)
 angles <- cbind(angles, clusters)
 angles <- as.data.frame(angles)
 autoplot(stats::prcomp(clr(angles[, 1:k])), 
@@ -103,6 +110,10 @@ autoplot(stats::prcomp(clr(side_lengths[, 1:k])),
          main = 'PCA of Simulated Shapes Relative Side Lengths')
 #biplot(stats::prcomp(side_lengths[, 1:k]))
 #plot(stats::prcomp(side_lengths[, 1:k], type = 'l'))
+
+## Test reflex angle counterexample
+chain <- rbind(c(0, 0), c(5, 0), c(5, 5), c(2.5, 0.5), c(0, 5), c(0, 0))
+get_interior_angles(chain) # Remove normalization first
 
 #### Load MPEG-7 data ####
 require(SAFARI) # Image processing
