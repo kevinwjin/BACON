@@ -1,4 +1,4 @@
-# BACON: Bayesian Cluster Analysis of Polygons via a Double Dirichlet Mixture Model
+# BACON: Bayesian Clustering of n-gons via a Double Dirichlet Mixture Model
 
 ## Introduction
 `BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
