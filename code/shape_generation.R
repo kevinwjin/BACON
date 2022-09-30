@@ -21,7 +21,7 @@ generate <- function(k = 3, min = 0, max = 1) {
   # Compute the centroid of the chain
   centroid <- rowSums(t(chain)) / nrow(chain)
   
-  # Sort vertices by decreasing angle
+  # Draw distance vectors between centroid and vertices and calculate angles
   sorting_angles <- matrix(nrow = nrow(chain), ncol = 1)
   for (n in seq_len(nrow(chain))) {
     dist <- chain[n, ] - centroid
@@ -256,6 +256,84 @@ compositional <- function(data, sum) {
   return(normalized)
 }
 
+#' Reproduce the unit polygon from relative interior angles and relative side
+#' lengths
+#'
+#' @description
+#' Given two numerical vectors of compositional data containing relative 
+#' interior angles and relative side lengths, redraw the unit polygonal chain, 
+#' centered at the origin.
+#'
+#' @param angles A numeric vector containing interior angles.
+#' @param side_lengths A numeric vector containing relative side lengths.
+#'
+#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the unit polygonal chain.
+unit_polygon <- function(angles, side_lengths) {
+  if (length(angles) == length(side_lengths)) {
+    # Create (k + 1) x 2 matrix containing the x-y coordinates of the vertices 
+    # of the unit polygonal chain.
+    chain <- matrix(0, # Start at the origin 
+                    nrow = length(angles) + 1, 
+                    ncol = 2, 
+                    byrow = TRUE)
+    
+    # Draw first side (the second side after the first vertex)
+    side <- side_lengths[1]
+    chain[2, ] <- c(side, 0)
+    
+    # Take first angle (the first vertex)
+    sum <- (length(angles) - 2) * 180 # Total interior angle
+    angle <- sum * angles[2] # Calculate current interior angle
+    angle <- angle * (pi / 180) # R's trigonometric functions use radians
+    
+    # for (i in seq_len(length(angles))) {
+
+      # Anticlockwise rotation matrix
+      rotation <- matrix(c(cos(angle), -sin(angle),
+                            sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+      
+      # Rotate the chain
+      side <- side_lengths[2]
+      chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+      
+      
+      # Take second angle (the second vertex)
+      angle <- sum * angles[3] # Calculate current interior angle
+      angle <- angle * (pi / 180) # R's trigonometric functions use radians
+      angle <- pi - angle
+      rotation <- matrix(c(cos(angle), -sin(angle),
+                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+      side <- side_lengths[3]
+      chain[4, ] <- c(rotation %*% chain[3, ]) + c(side, 0)
+      
+      # Take third angle (the third vertex)
+      angle <- sum * angles[4] # Calculate current interior angle
+      angle <- angle * (pi / 180) # R's trigonometric functions use radians
+      rotation <- matrix(c(cos(angle), -sin(angle),
+                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+      side <- side_lengths[4]
+      chain[5, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+      
+      # Take fourth angle (the fourth vertex)
+      angle <- sum * angles[5] # Calculate current interior angle
+      angle <- angle * (pi / 180) # R's trigonometric functions use radians
+      rotation <- matrix(c(cos(angle), -sin(angle),
+                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+      side <- side_lengths[5]
+      chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+      
+    # }
+    
+    # For the sf function
+    colnames(chain) <- c("x", "y")
+    
+  } else {
+    stop("Angle and side length vectors differ in length.")
+  }
+  return(chain)
+}
+
 #' Add jitter to a polygonal chain
 #'
 #' @description Randomizes the vertices or angles of a polygonal chain. If
@@ -424,7 +502,7 @@ rotate <- function(chain, angle, clockwise = TRUE) {
   # Calculate centroid vector
   centroid <- matrix(rowSums(t(chain)) / nrow(chain))[, rep(1, each = nrow(chain))]
   if (clockwise) {
-    # Calculate clockwise rotation matrix
+    # Calculate counterclockwise rotation matrix
     rotation <- matrix(c(cos(angle), -sin(angle),
                          sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
     
@@ -432,7 +510,7 @@ rotate <- function(chain, angle, clockwise = TRUE) {
     chain <- rotation %*% (t(chain) - centroid) + centroid
     
   } else {
-    # Calculate counter-clockwise rotation matrix
+    # Calculate clockwise rotation matrix
     rotation <- matrix(c(cos(angle), sin(angle),
                          -sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
     
