@@ -54,8 +54,8 @@ ari <- function(zt, z) {
 
 
 ## Shape detection analysis ####################################################
-link <- "/Users/Huimin Li/PhD/Project/Project 3/"
-setwd(paste0(link, "Code"))
+link <- "~/Documents/Programming/Repositories/BACON/data/simulated/"
+setwd("~/Documents/Programming/Repositories/BACON/code")
 library(MCMCpack)    ## for function rdirichlet()
 
 load(paste0(link, "Data/decagons.Rdata"))
