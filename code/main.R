@@ -1,4 +1,4 @@
-# Execution script
+# Data handling and analysis
 # Author: Kevin Jin
 
 #### Load data simulation functions ####
@@ -13,9 +13,9 @@ get_interior_angles(chain)
 
 #### Generate simulated data ####
 ## Step 1: Replicate two shapes 5 times each and add jitter
-n <- 120 # Total number of shapes
+n <- 200 # Total number of shapes
 k <- 10 # Number of vertices
-z <- 4 # Pre-specified number of clusters
+z <- 10 # Pre-specified number of clusters
 
 # Generate first shape
 shape_1 <- generate(k = k)
@@ -24,7 +24,7 @@ shapes_1 <- do.call(rbind, replicate(n / z, shape_1, simplify = FALSE))
 # Apply jitter (each k + 1 rows is a shape)
 for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
   shapes_1[i:(i + k), ] <- jitter(shapes_1[i:(i + k), ], random = c("vertices"),
-                                        factor = 0.01)
+                                  factor = 0.025)
 }
 
 # Generate second shape
@@ -34,7 +34,7 @@ shapes_2 <- do.call(rbind, replicate(n / z, shape_2, simplify = FALSE))
 # Apply jitter (each k + 1 rows is a shape)
 for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
   shapes_2[i:(i + k), ] <- jitter(shapes_2[i:(i + k), ], random = c("vertices"),
-                                        factor = 0.01)
+                                  factor = 0.025)
 }
 
 # Generate third shape
@@ -44,7 +44,7 @@ shapes_3 <- do.call(rbind, replicate(n / z, shape_3, simplify = FALSE))
 # Apply jitter (each k + 1 rows is a shape)
 for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
   shapes_3[i:(i + k), ] <- jitter(shapes_3[i:(i + k), ], random = c("vertices"),
-                                  factor = 0.01)
+                                  factor = 0.025)
 }
 
 # Generate fourth shape
@@ -54,11 +54,73 @@ shapes_4 <- do.call(rbind, replicate(n / z, shape_4, simplify = FALSE))
 # Apply jitter (each k + 1 rows is a shape)
 for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
   shapes_4[i:(i + k), ] <- jitter(shapes_4[i:(i + k), ], random = c("vertices"),
-                                  factor = 0.01)
+                                  factor = 0.025)
 }
 
+# Generate fifth shape
+shape_5 <- generate(k = k)
+# Replicate n / z times
+shapes_5 <- do.call(rbind, replicate(n / z, shape_5, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_5[i:(i + k), ] <- jitter(shapes_5[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.025)
+}
+
+# Generate sixth shape
+shape_6 <- generate(k = k)
+# Replicate n / z times
+shapes_6 <- do.call(rbind, replicate(n / z, shape_6, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_6[i:(i + k), ] <- jitter(shapes_6[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.025)
+}
+
+# Generate seventh shape
+shape_7 <- generate(k = k)
+# Replicate n / z times
+shapes_7 <- do.call(rbind, replicate(n / z, shape_7, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_7[i:(i + k), ] <- jitter(shapes_7[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.025)
+}
+
+# Generate eighth shape
+shape_8 <- generate(k = k)
+# Replicate n / z times
+shapes_8 <- do.call(rbind, replicate(n / z, shape_8, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_8[i:(i + k), ] <- jitter(shapes_8[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.025)
+}
+
+# Generate ninth shape
+shape_9 <- generate(k = k)
+# Replicate n / z times
+shapes_9 <- do.call(rbind, replicate(n / z, shape_9, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_9[i:(i + k), ] <- jitter(shapes_9[i:(i + k), ], random = c("vertices"),
+                                  factor = 0.025)
+}
+
+# Generate tenth shape
+shape_10 <- generate(k = k)
+# Replicate n / z times
+shapes_10 <- do.call(rbind, replicate(n / z, shape_10, simplify = FALSE))
+# Apply jitter (each k + 1 rows is a shape)
+for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
+  shapes_10[i:(i + k), ] <- jitter(shapes_10[i:(i + k), ], random = c("vertices"),
+                                   factor = 0.025)
+}
+
+
 # Combine into 1 matrix
-shapes <- rbind(shapes_1, shapes_2, shapes_3, shapes_4)
+shapes <- rbind(shapes_1, shapes_2, shapes_3, shapes_4, shapes_5, shapes_6,
+                shapes_7, shapes_8, shapes_9, shapes_10)
 
 # Plot shapes - draw one shape per plot
 for (i in seq(1, (n / 2 * (k + 1)), 
@@ -87,8 +149,10 @@ for (i in seq(1, n * (k + 1), by = (k + 1))) {
 # Create cluster labels
 clusters <- c()
 for (i in 1:z) {
-  clusters <- append(clusters, rep.int(i, times = 30))
+  clusters <- append(clusters, rep.int(i, times = (n / z)))
 }
+angles <- cbind(angles, clusters)
+side_lengths <- cbind(side_lengths, clusters)
 
 # PCA dimensional reduction
 require(ggfortify)
@@ -262,3 +326,5 @@ plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
 
 
 #### Bijective mapping for angle and side lengths
+
+#### Surjective mapping from data to coordinates
