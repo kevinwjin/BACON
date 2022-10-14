@@ -1,5 +1,5 @@
-# Probabilistic polygonal chain generation and manipulation
-# Authors: Kevin Jin, Qiwei Li
+# Functions for random polygonal chain generation and manipulation
+# Author: Kevin Jin
 
 #' Generate a random closed polygonal chain
 #'
@@ -256,8 +256,43 @@ compositional <- function(data, sum) {
   return(normalized)
 }
 
-#' Reproduce the unit polygon from relative interior angles and relative side
-#' lengths
+#' Reproduce the orientation of a a polygonal chain relative interior angles 
+#' and relative side lengths
+#'
+#' @description
+#' Given two numerical vectors of compositional data containing relative 
+#' interior angles and relative side lengths, return a vector of length k
+#' containing which directions to turn when redrawing the unit polygonal chain. 
+#'
+#' @param data A numeric vector of length k containing data.
+#' @param sum A numeric containing the sum of the vector.
+#'
+#' @return A boolean vector of length k containing the directions to turn when
+#' redrawing the polygonal chain.
+turning_orientation <- function(angles, side_lengths) {
+  v1 <- 0
+  v2 <- side_lengths[1]
+  m <- (v2y - v1y) / (v2x - v1x)
+  b <- 0
+  
+  y <- v3y
+  x <- v3x
+  # The first direction will always be left (FALSE) due to anticlockwise
+  # orientation.
+  orientation[1] <- FALSE
+  
+  for (i in seq_len(angles)) {
+    if (y > mx + b) {
+      orientation[i] <- FALSE # Turn left
+    } else {
+      orientation[i] <- TRUE # Turn right
+    }
+  }
+  return(orientation)
+}
+
+#' Reproduce the unit polygonal chain from relative interior angles and relative 
+#' side lengths
 #'
 #' @description
 #' Given two numerical vectors of compositional data containing relative 
@@ -269,7 +304,7 @@ compositional <- function(data, sum) {
 #'
 #' @return A (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the unit polygonal chain.
-unit_polygon <- function(angles, side_lengths) {
+unit_chain <- function(angles, side_lengths) {
   if (length(angles) == length(side_lengths)) {
     # Create (k + 1) x 2 matrix containing the x-y coordinates of the vertices 
     # of the unit polygonal chain.
