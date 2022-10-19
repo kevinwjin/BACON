@@ -1,7 +1,7 @@
 # BACON: Bayesian Clustering of n-gons via a Double Dirichlet Mixture Model
 
 ## Introduction
-`BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Markov chain Monte Carlo method.
+`BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them by approximating posterior distributions using a Gibbs sampler.
 
 ## Installation
 Install BACON by one of the following methods, depending on your preference:
@@ -21,15 +21,18 @@ devtools:install_github("kevinwjin/BACON")
 *(under development)*
 
 ## Contents
-* `code/main.R` - Execution script
-* `code/model.R` - Implementation of the model in R
-* `code/model.cpp` - Faster implementation of the model in C++ *(recommended)*
-* `code/shape_generation.R` - Functions for generating simulated data
+* `code/data_simulation.R` - Data simulation script
+* `code/shape_generation.R` - Data simulation functions
+* `code/shape_simu_analysis.R` - Clustering script
+* `code/shape_mcmc.cpp` - C++ implementation of the MCMC algorithm
 * `data/` - Real-world datasets
 
 ## Prerequisites
+* `sf` - Spatial detection for interior angle calculation
 * `Rcpp` - Faster MCMC approximation
-* `sf` - Used in interior angle calculation
+* `RcppArmadillo` - Fast matrix operations
+* `RcppDist` - Call statistical distributions from within C++
+* `RcppEigen` - Faster matrix operations
 
 ## Examples
 *(under development)*
