@@ -328,3 +328,15 @@ plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
 #### Bijective mapping for angle and side lengths
 
 #### Surjective mapping from data to coordinates
+
+#### MPEG-7 cluster analysis
+angles <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
+side_lengths <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
+
+for(i in 1:length(mpeg_7_twenty)) {
+  if (i == 824) next # Temporarily skip, chain looks weird for some reason
+  chain <- mpeg_7_twenty[[i]]
+  colnames(chain) <- c("x", "y")
+  angles[i, ] <- get_interior_angles(chain)
+  side_lengths[i, ] <- get_side_lengths(chain)
+}
