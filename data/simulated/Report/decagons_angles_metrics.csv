@@ -1,0 +1,7 @@
+"data.name","data","method","metrics","value"
+"decagons","angles","K-means","ARI",0.542801200962727
+"decagons","angles","Hierarchical","ARI",0.333543251482821
+"decagons","angles","Model-based","ARI",0.447863247863248
+"decagons","angles","Ours (PPM)","ARI",0.398147238767599
+"decagons","angles","Ours (MAP)","ARI",0.38017392971079
+"decagons","angles","Ours","time",231.038

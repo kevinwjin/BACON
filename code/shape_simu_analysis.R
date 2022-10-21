@@ -59,8 +59,8 @@ setwd("~/Documents/Programming/Repositories/BACON/code")
 library(MCMCpack)    ## for function rdirichlet()
 
 load(paste0(link, "Data/decagons.Rdata"))
-X = angles[,1:10]
-Y = side_lengths[,1:10]
+X = angles[, 1:20]
+Y = side_lengths[, 1:20]
 true_cluster = angles[, "clusters"]
 n = nrow(X)
 p = ncol(X)
