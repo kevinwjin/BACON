@@ -1,4 +1,4 @@
-# Data handling and analysis
+# Data simulation and generation
 # Author: Kevin Jin
 
 #### Load data simulation functions ####
@@ -234,9 +234,21 @@ colnames(angles) <- 1:3000
 colnames(side_lengths) <- 1:3000
 
 
+#### Convert MPEG-7 to polygonal chains ####
+angles <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
+side_lengths <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
+
+for(i in 1:length(mpeg_7_twenty)) {
+  if (i == 824) next # Temporarily skip, chain looks weird for some reason
+  chain <- mpeg_7_twenty[[i]]
+  colnames(chain) <- c("x", "y")
+  angles[i, ] <- get_interior_angles(chain)
+  side_lengths[i, ] <- get_side_lengths(chain)
+}
+
 #### Load ADHD-200 data ####
 # Load all chains in the folder
-setwd("~/Documents/Programming/Repositories/CAPoly/data/adhd_200/shapes/polygonal")
+setwd("~/Documents/Programming/Repositories/BACON/data/adhd_200/shapes/polygonal")
 file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
 chains <- lapply(file_names, function(x) {
   load(file = x)
@@ -325,18 +337,101 @@ biplot(stats::prcomp(side_lengths[, 1:50]))
 plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
 
 
-#### Bijective mapping for angle and side lengths
+#### Bijection from data to coordinates ####
 
-#### Surjective mapping from data to coordinates
+#### Create binary images from ADHD-200 chains ####
+## Test conversion of 1 chain
+adhd <- matrix(unlist(plg.chains), ncol = 2)
+png(filename = "ADHD-200_1.png", width = 256, height = 256, units = "px")
+par(bg = 'black', fg = 'white')
+plot(adhd, type = 'l', xaxt = 'n', yaxt = 'n', ann = FALSE, frame.plot = FALSE,
+     asp = 1)
+polygon(adhd, col = "white")
+dev.off()
 
-#### MPEG-7 cluster analysis
-angles <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
-side_lengths <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
+library(EBImage)
+img <- readImage("ADHD-200_1.png")
+img <- channel(img, "gray")
+img <- img > otsu(img, levels = 256)
+display(img)
+writeImage(img, files = "ADHD-200_1_binary.png")
 
-for(i in 1:length(mpeg_7_twenty)) {
-  if (i == 824) next # Temporarily skip, chain looks weird for some reason
-  chain <- mpeg_7_twenty[[i]]
+library(SAFARI)
+library(parallel)
+img <- read.image(file = "ADHD-200_1_binary.png")
+data <- binary.segmentation(img, 
+                            id = "adhd", 
+                            filter = 150, 
+                            k = 3, 
+                            categories = c("geometric", 
+                                           "boundary", 
+                                           "topological"))
+data$desc
+data$plg.chains
+
+## Convert all chains
+# Unlist entire list of chains and put it in one list
+setwd("~/Documents/Programming/Repositories/BACON/data/adhd_200/shapes/polygonal")
+file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
+chains <- lapply(file_names, function(x) {
+  load(file = x)
+  mget(ls()[ls()!= "filename"])
+})
+
+# Loop through list of chains and convert all to binary images
+setwd("~/Documents/Programming/Repositories/BACON/data/adhd_200/binary_images")
+
+for (i in 1:(length(chains) - 1)) {
+  chain <- chains[[i]]$plg.chains$`1` # Take 1 chain
   colnames(chain) <- c("x", "y")
-  angles[i, ] <- get_interior_angles(chain)
-  side_lengths[i, ] <- get_side_lengths(chain)
+  png(filename = paste0("ADHD-200_", i, ".png"), width = 256, height = 256, 
+      units = "px")
+  par(bg = 'black', fg = 'white')
+  plot(chain, type = 'l', xaxt = 'n', yaxt = 'n', ann = FALSE, 
+       frame.plot = FALSE, asp = 1)
+  polygon(chain, col = "white")
+  dev.off()
 }
+
+for (i in 1:(length(chains) - 1)) {
+  require(EBImage)
+  img <- readImage(paste0("ADHD-200_", i, ".png"))
+  img <- channel(img, "gray")
+  img <- img > otsu(img, levels = 256)
+  writeImage(img, files = paste0("ADHD-200_", i, ".png"))
+}
+
+# Extract SAFARI features
+require(SAFARI)
+extract_features <- function(img) {
+  img <- read.image(img)
+  img_segs <- binary.segmentation(img, 
+                                  id = "adhd", 
+                                  filter = 150, 
+                                  k = 3, 
+                                  categories = c("geometric", 
+                                                 "boundary", 
+                                                 "topological"))
+  features <- data.frame(img_segs[["desc"]][-c(1, 1:4)])
+  features <- cbind(c(img), features)
+  return(features)
+}
+
+require(parallel)
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, varlist = c("read.image", "binary.segmentation"))
+file_names <- list.files(pattern = "*png", full.names = TRUE)
+features <- parSapply(cl, file_names, FUN = extract_features)
+stopCluster(cl)
+gc()
+
+require(dplyr)
+features <- data.frame(t(features), row.names = 1)
+features <- data.frame(lapply(features, unlist))
+features_scaled <- features %>% mutate_all(scale)
+
+# k-means 
+
+# Hierarchical
+
+# GMM
