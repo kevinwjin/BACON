@@ -423,7 +423,6 @@ clusterExport(cl, varlist = c("read.image", "binary.segmentation"))
 file_names <- list.files(pattern = "*png", full.names = TRUE)
 features <- parSapply(cl, file_names, FUN = extract_features)
 stopCluster(cl)
-gc()
 
 require(dplyr)
 features <- data.frame(t(features), row.names = 1)
