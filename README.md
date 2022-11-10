@@ -28,12 +28,12 @@ devtools:install_github("kevinwjin/BACON")
 * `data/` - Real-world datasets
 
 ## Prerequisites
-* `sf` - Spatial detection for interior angle calculation
+* `sf` - Spatial point detection for interior angle calculation
 * `MCMCpack` - For the `rdirichlet()` function
 * `mcclust` - MCMC clustering sample processing
 * `mclust` - GMM implementation for comparison purposes
 * `Rcpp` - Faster MCMC approximation
-* `RcppArmadillo` - Fast matrix operations
+* `RcppArmadillo` - Fast matrix operations (requires GNU Fortran library)
 * `RcppDist` - Call statistical distributions from within C++
 * `RcppEigen` - Faster matrix operations
 
