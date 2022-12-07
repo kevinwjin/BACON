@@ -168,7 +168,7 @@ is_reflex <- function(index, chain) {
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
   if (is_closed(chain)) {
-    # Number of vertices (k) + 1 due since chain is closed
+    # Number of vertices/rows is (k + 1) because the chain is closed
     n <- nrow(chain)
     
     # Loop over entire chain, checking each vertex for reflex angle
