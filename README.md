@@ -21,10 +21,11 @@ devtools:install_github("kevinwjin/BACON")
 *(under development)*
 
 ## Contents
-* `code/data_simulation.R` - Data simulation script
-* `code/shape_generation.R` - Data simulation functions
-* `code/shape_simu_analysis.R` - Clustering script
-* `code/shape_mcmc.cpp` - C++ implementation of the MCMC algorithm
+* `code/simulate_shapes.R` - Data simulation
+* `code/shape_simu_analysis.R` - MCMC algorithm execution
+* `code/data_analysis.R` - Testing alternative clustering methods
+* `code/functions/shape_generation.R` - Functions for data simulation
+* `code/functions/shape_mcmc.cpp` - MCMC algorithm
 * `data/` - Real-world datasets
 
 ## Prerequisites
