@@ -22,7 +22,7 @@ your R environment. This file contains all functions necessary for shape
 data simulation:
 
 ```R
-source("~/BACON/code/shape_generation.R")
+source("~/BACON/code/shape_simulation.R")
 ```
 
 Next, generate some simulated shape data. We will use the `generate()` function,
