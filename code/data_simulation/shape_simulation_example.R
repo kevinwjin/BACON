@@ -2,7 +2,7 @@
 # Author: Kevin Jin
 
 #### Load data simulation functions ####
-source("~/Documents/Repositories/BACON/code/shape_generation.R")
+source("~/Documents/Repositories/BACON/code/shape_simulation.R")
 
 #### Generate simulated data ####
 ## Step 1: Simulate 10 shapes 20 times each with jitter (200 total)
