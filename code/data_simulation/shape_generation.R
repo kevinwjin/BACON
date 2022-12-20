@@ -256,7 +256,7 @@ compositional <- function(data, sum) {
   return(normalized)
 }
 
-#' Reproduce the orientation of a a polygonal chain relative interior angles 
+#' Reproduce the orientation of a polygonal chain relative interior angles 
 #' and relative side lengths
 #'
 #' @description

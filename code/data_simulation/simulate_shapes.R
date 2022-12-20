@@ -66,6 +66,8 @@ for (i in 1:z) {
 angles <- cbind(angles, clusters)
 side_lengths <- cbind(side_lengths, clusters)
 
+## Finished! Your simulated data is stored in 'angles' and 'side_lengths'.
+
 # Optional step: PCA dimensional reduction
 require(ggfortify)
 require(compositions)
