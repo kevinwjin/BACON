@@ -17,7 +17,7 @@ devtools:install_github("kevinwjin/BACON")
 
 ## Usage
 ### Simulate shape data
-To simulate shape data for clustering, begin by adding `shape_generation.R` to 
+To simulate shape data for clustering, begin by adding `shape_simulation.R` to 
 your R environment. This file contains all functions necessary for shape 
 data simulation:
 
@@ -123,14 +123,14 @@ side_lengths <- cbind(side_lengths, clusters) # Completed side length dataset
 ```
 
 A template for the above procedure of simulating two hundred 20-gons is
-provided in `simulate_shapes.R`.
+provided in `shape_simulation_example.R`.
 
 ### Cluster shape data
 *(under development)*
 
 ## Directory contents
-* `code/functions/shape_generation.R` - Data simulation functions
-* `code/simulate_shapes.R` - Data simulation template
+* `code/functions/shape_simulation.R` - Data simulation functions
+* `code/shape_simulation_example.R` - Data simulation template
 * `code/functions/shape_mcmc.cpp` - MCMC clustering algorithm
 * `code/shape_simu_analysis.R` - Clustering template
 * `code/data_analysis.R` - Cluster validation and method comparison
