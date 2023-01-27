@@ -1,7 +1,7 @@
 # BACON: Bayesian Clustering of n-gons via a Double Dirichlet Mixture Model
 
 ## Introduction
-`BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. relative interior angles and relative side lengths). The algorithm accepts a matrix, list, or dataframe containing the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them using a Gibbs sampler.
+`BACON` is an R package for landmark-based Bayesian clustering of closed polygonal chains, relying on intrinsic shape features (i.e. proportions of interior angles and side lengths). The algorithm accepts the coordinates of closed polygonal chains, extracts the aforementioned inherent shape features, and clusters them using a Gibbs sampler.
 
 ## Installation (for future use)
 Install the package by one of the following methods:
@@ -27,53 +27,55 @@ source("~/BACON/code/shape_simulation.R")
 
 Next, generate some simulated shape data. We will use the `generate()` function,
 which simulates the Cartesian coordinates of the vertices of a shape.
-As an example, we will simulate two hundred 20-gons belonging to 10 clusters. 
-Let's define a function that will create a 200 x 20 matrix where each row 
-is a separate 20-gon and each column contains the Cartesian coordinates of a 
-vertex in a given 20-gon. Each row will have some jitter (the degree, or factor, 
-of jitter can be specified) applied to it to distinguish the individual shapes
-and clusters:
+As an example, we will simulate 1000 20-gons belonging to 10 clusters. Each
+cluster will have 100 20-gons.
+
+We define a function that will create a list of sublists where each sublist is
+a cluster and each element within each sublist is the a (k + 1) x n matrix 
+containing the Cartesian coordinates of a shape. Each row will have some jitter 
+(the degree, or factor, of jitter can be specified) applied to it to 
+distinguish the individual shapes within a cluster:
 
 ```R
-n <- 200 # Total number of shapes
-k <- 20 # Number of vertices
-z <- 10 # Pre-specified number of clusters
-
-simulate_shapes <- function(f) {
-  # Generate random shape with k vertices
-  shape <- generate(k = k)
-  
-  # Replicate shape n / z times
-  shapes <- do.call(rbind, replicate(n / z, shape, simplify = FALSE))
-  
-  # Count by k + 1 because last vertex repeats due to closedness
-  for (i in seq(1, (n / z * (k + 1)), by = (k + 1))) {
-  
-    # Apply jitter to each chain
-    shapes[i:(i + k), ] <- jitter(shapes[i:(i + k), ], random = c("vertices"),
-                                    factor = 0.01)
+simulate_shapes <- function(x, z, n, k, jitter_factor) {
+  # Entire dataset, a list of length z containing z sublists/clusters
+  dataset <- list()
+  # Each sublist is a cluster containing n cluster members
+  for (cluster in 1:z) {
+    # Generate random k-gon
+    shape <- generate(k = k)
+    # Replicate k-gon n times
+    shapes <- replicate(n, shape, simplify = FALSE)
+    # Apply jitter to each k-gon
+    for (i in seq_along(shapes)) {
+      shapes[[i]] <- 
+        jitter(shapes[[i]], random = c("vertices"), factor = jitter_factor)
+    }
+    # Add to main shape dataset
+    dataset[[length(dataset) + 1]] <- shapes
   }
-  return(shapes)
+  return(dataset)
 }
 ```
 
-Now we run the function and generate two hundred 20-gons, storing
-the simulated shape coordinate data into one three-dimensional array:
+Now we call the function and generate 1000 20-gons, storing
+the simulated shape coordinate data into a list:
 
 ```R
-# Simulate z clusters of shapes into 3-D array [(k + 1) * z, xy, z]
-# To access first shape: array[, , 1]
-shapes <- sapply(1:z, simulate_shapes, simplify = "array")
+dataset <- simulate_shapes(x = 1000, # 1000 shapes total
+                          z = 10, # 10 clusters
+                          n = 100, # 100 shapes per cluster (could differ per cluster)
+                          k = 20, # Each shape is a 20-gon
+                          jitter_factor = 0.01) # Each cluster has 0.01 jitter
 ```
 
-If you wish, you may visualize the simulated 20-gons by plotting the 
+For a sanity check, you may visualize the simulated 20-gons by plotting the 
 coordinates of each shape:
 
 ```R
-# Plot each shape
-for (i in seq_len(z)) {
-  for (j in seq(1, (n / z * (k + 1)), by = (k + 1))) {
-    plot(shapes[j:(j + k), , i], type = "l")
+for (i in seq_along(dataset)) {
+  for (shape in dataset[[i]]) {
+    plot(shape, type = "l")
   }
 }
 ```
@@ -87,54 +89,46 @@ cluster. To do this, call `get_interior_angles()` and `get_side_lengths()`, and
 store the resultant interior angle and side length datasets into new matrices:
 
 ```R
-# Extract relative interior angles of the shapes
-angles <- matrix(nrow = n, ncol = k, byrow = TRUE)
-row <- 1 # Row counter
-for (i in seq_len(z)) { # Extract all clusters
-  for (j in seq(1, n / z * (k + 1), by = (k + 1))) { # Extract all shapes per cluster
-    print(j)
-    angles[row, ] <- get_interior_angles(shapes[j:(j + k), , i])
-    row <- row + 1
-  }
-}
+angles <- list()
+side_lengths <- list()
 
-# Extract relative side lengths of the shapes
-side_lengths <- matrix(nrow = n, ncol = k, byrow = TRUE)
-row <- 1 # Row counter
-for (i in seq_len(z)) { # Extract all clusters
-  for (j in seq(1, n / z * (k + 1), by = (k + 1))) { # Extract all shapes per cluster
-    print(j)
-    side_lengths[row, ] <- get_side_lengths(shapes[j:(j + k), , i])
-    row <- row + 1
+for (i in seq_along(dataset)) { # For all clusters
+  a <- list()
+  l <- list()
+  i <- 1 # Loop counter
+  for (shape in dataset[[i]]) { # Within one cluster
+    a[[i]] <- get_interior_angles(shape) # Extract interior angle proportions
+    l[[i]] <- get_side_lengths(shape) # Extract side length proportions
+    i <- i + 1
   }
+  angles[[length(angles) + 1]] <- a # Add to main angle proportion dataset
+  side_lengths[[length(side_lengths) + 1]] <- l # Add to main side length dataset
 }
 ```
 
-Finally, we finish the simulated data by appending a column containing the
-cluster labels to each new dataset:
+Finally, we finish the simulated data by generating a matrix containing the
+cluster labels:
 
 ```R
 clusters <- c()
 for (i in 1:z) {
   clusters <- append(clusters, rep.int(i, times = (n / z)))
 }
-angles <- cbind(angles, clusters) # Completed angle dataset
-side_lengths <- cbind(side_lengths, clusters) # Completed side length dataset
 ```
 
-A template for the above procedure of simulating two hundred 20-gons is
+A template for the above procedure of simulating 1000 20-gons is
 provided in `shape_simulation_example.R`.
 
 ### Cluster shape data
 *(under development)*
 
 ## Directory contents
-* `code/functions/shape_simulation.R` - Data simulation functions
-* `code/shape_simulation_example.R` - Data simulation template
-* `code/functions/shape_mcmc.cpp` - MCMC clustering algorithm
-* `code/shape_simu_analysis.R` - Clustering template
-* `code/data_analysis.R` - Cluster validation and method comparison
-* `data/` - Real-world datasets
+* `code/clustering/bacon.R` - Clustering example
+* `code/clustering/bacon.R` - Clustering execution function
+* `code/clustering/BACONmcmc.cpp` - MCMC clustering algorithm
+* `code/data_simulation/shape_simulation.R` - Data simulation functions
+* `code/data_simulation/shape_simulation_example.R` - Data simulation template
+* `data/demo.RData` - Demo dataset
 
 ## Prerequisites
 * `sf` - Spatial point detection for interior angle calculation
