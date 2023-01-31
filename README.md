@@ -123,25 +123,22 @@ provided in `shape_simulation_example.R`.
 *(under development)*
 
 ## Directory contents
-* `code/clustering/bacon.R` - Clustering example
 * `code/clustering/bacon.R` - Clustering execution function
-* `code/clustering/BACONmcmc.cpp` - MCMC clustering algorithm
-* `code/data_simulation/shape_simulation.R` - Data simulation functions
-* `code/data_simulation/shape_simulation_example.R` - Data simulation template
+* `code/clustering/BACONmcmc.cpp` - MCMC algorithm
 * `data/demo.RData` - Demo dataset
+* `code/clustering/example.R` - Shape clustering example
+* `code/data_simulation/shape_simulation.R` - Data simulation functions
+* `code/data_simulation/shape_simulation_example.R` - Data simulation example
 
 ## Prerequisites
-* `sf` - Spatial point detection for interior angle calculation
-* `MCMCpack` - For the `rdirichlet()` function
-* `mcclust` - MCMC clustering sample processing
-* `mclust` - GMM implementation for comparison purposes
-* `Rcpp` - Fast MCMC operations
+* `Rcpp` - Fast MCMC
 * `RcppArmadillo` - Fast matrix operations (requires GNU Fortran library)
 * `RcppDist` - Call statistical distributions from within C++
 * `RcppEigen` - Faster matrix operations
-
-## Examples
-*(under development)*
+* `MCMCpack` - For `rdirichlet()`
+* `mcclust` - MCMC clustering sample processing
+* `sf` - Spatial point detection for interior angle calculation
+* `mclust` - GMM implementation for comparison purposes
 
 ## Contributors
 * [Kevin Jin](https://www.linkedin.com/in/kevin-w-jin/)
