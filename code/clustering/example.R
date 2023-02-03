@@ -9,26 +9,30 @@ source("bacon.R")
 
 ## Load demo data
 ## BACON requires three inputs:
-## 1. L: a m-by-n matrix of length proportions, where m is the number of n-gons and n is the number of vertices.
+## 1. L: a m-by-n matrix of length proportions, where m is the number of n-gons 
+## and n is the number of gons.
 ## 2. A: a m-by-n matrix of angle proportions.
-## 3. K: Number of clusters
+## 3. K: the number of clusters in the dataset.
 load("demo.RData")
 head(L)
 head(A)
 
 ## Run the model
-## We run bacon with its defaulting setting on the above demo data.
-res = bacon(L, A, K = 10)
+## We run BACON with default settings on the above demo data.
+res = bacon(side_lengths[, 1:50], angles[, 1:50], K = 4)
 
-## Following is the output of bacon. The important output including:
-## cluster is the estimated cluster assignment. s_map is the estimated starting vertex indicators. 
-## r_map is the estimated reverse indicators r. 
+## The following is the output of BACON. The important output includes:
+## cluster: the estimated cluster assignment.
+## s_map: the estimated starting vertex indicators. 
+## r_map: the estimated reverse indicators r.
 res$cluster
 res$s_map
 res$r_map
 
 ## Check convergence
-plot(rowSums(res$s_store == 0), type = "l", ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
 
-  
+## ADHD-200 dataset (subsampled to 50 vertices)
+save("res", file = "ADHD-200_clustering_k=50.Rdata")
  
