@@ -69,6 +69,9 @@ for(i in 1:length(mpeg_7_twenty)) {
 }
 
 #### Load ADHD-200 data ####
+# Load data extraction functions
+source("~/Documents/Repositories/BACON/code/data_simulation/shape_simulation.R")
+
 # Load all chains in the folder
 setwd("~/Documents/Repositories/BACON/data/adhd_200/shapes/polygonal")
 file_names <- list.files(pattern = "*.Rdata", full.names = TRUE)
@@ -96,9 +99,9 @@ for (i in 1:length(chains)) {
 }
 
 # Name data rows and columns
-names <- sapply(1:length(chains), function(i) chains[[i]]$id[2])
-rownames(angles) <- names
-rownames(side_lengths) <- names
+#names <- sapply(1:length(chains), function(i) chains[[i]]$id[2])
+#rownames(angles) <- names
+#rownames(side_lengths) <- names
 colnames(angles) <- 1:50
 colnames(side_lengths) <- 1:50
 
