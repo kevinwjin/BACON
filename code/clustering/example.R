@@ -9,7 +9,7 @@ source("bacon.R")
 
 ## Load demo data
 ## BACON requires three inputs:
-## 1. L: a m-by-n matrix of length proportions, where m is the number of n-gons and n is the number of gons.
+## 1. L: a m-by-n matrix of length proportions, where m is the number of n-gons and n is the number of vertices.
 ## 2. A: a m-by-n matrix of angle proportions.
 ## 3. K: Number of clusters
 load("demo.RData")
@@ -18,7 +18,7 @@ head(A)
 
 ## Run the model
 ## We run bacon with its defaulting setting on the above demo data.
-res = bacon(L, A, K = 3)
+res = bacon(L, A, K = 10)
 
 ## Following is the output of bacon. The important output including:
 ## cluster is the estimated cluster assignment. s_map is the estimated starting vertex indicators. 

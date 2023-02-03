@@ -2,11 +2,12 @@
 ## BACON  : Bayesian Clustering of n-gons via a Double Dirichlet Mixture Model
 ## Authors: Kevin Jin, Huimin Li, Stephen McKeown, and Qiwei Li
 ##
-## Observed data is involved:
-## 1) L: a m-by-n matrix of length proportions, where m is the number of n-gons and n is the number of gons
+## Observed data involved:
+## 1) L: a m-by-n matrix of length proportions, where m is the number of n-gons 
+## and n is the number of gons
 ## 2) A: a m-by-n matrix of angle proportions
 ##
-## Parameters are to be estimated:
+## Parameters to be estimated:
 ## 3) z: a vector with m elements indicating cluster allocation parameters
 ## 4) pi: a vector with K elements indicating underlying group proportion
 ## 5) s: a vector with m elements indicating starting vertex indicators
@@ -14,7 +15,7 @@
 ## 7) Lambda: a K-by-n matrix of concentration parameter of L
 ## 8) Theta: a K-by-n matrix of concentration parameter of A
 ## 
-## The main outputs including cluster assignment, estimation of s, and 
+## The main outputs include cluster assignment, estimation of s, and 
 ## estimation of r (posterior probability of inclusion (PPI))
 ################################################################################
 
@@ -41,7 +42,8 @@ switch_label <- function(z_store,  pi_store, Lambda_store, Theta_store, K){
     }
   }
   
-  return(list("z_store" = z_store, "Theta_store" = Theta_store, "Lambda_store" = Lambda_store, "pi_store" = pi_store))
+  return(list("z_store" = z_store, "Theta_store" = Theta_store, 
+              "Lambda_store" = Lambda_store, "pi_store" = pi_store))
 }
 
 
@@ -78,10 +80,12 @@ bacon <- function(L, A, K, iter = 2000, burn = 1000) {
   res = BACONmcmc(L, A, K, iter, burn)
   end_time = proc.time()
   run_time = as.numeric((end_time - start_time)[1:3], "secs")
-  print(paste0(paste0(c("user", "system", "elapsed"), " time is "), round(run_time, digits = 3), "s"))
+  print(paste0(paste0(c("user", "system", "elapsed"), " time is "), 
+               round(run_time, digits = 3), "s"))
   
   ## Label switching of z, pi, Lambda, and Theta by Theta
-  tt <- switch_label(res$z_store,  res$pi_store, res$Lambda_store, res$Theta_store, K)
+  tt <- switch_label(res$z_store,  res$pi_store, res$Lambda_store, 
+                     res$Theta_store, K)
   z_store <- tt$z_store
   Lambda_store <- tt$Lambda_store 
   Theta_store <- tt$Theta_store
@@ -106,18 +110,19 @@ bacon <- function(L, A, K, iter = 2000, burn = 1000) {
   r_map <- res$r_map
   
   
-  ## Evaluate the concentration parameters #######################################
+  ## Evaluate the concentration parameters ####################################
   Lambda_store = lapply(1:iter, function(x) Lambda_store[ , , x])
   Theta_store = lapply(1:iter, function(x) Theta_store[ , , x])
 
   Lambda_hat = Reduce("+", Lambda_store[(burn + 1):iter]) / (iter - burn)
   Theta_hat = Reduce("+", Theta_store[(burn + 1):iter]) / (iter - burn)
   
-  return(list("cluster" = z_ppm, "z_map" = z_map, "s_map" = s_map, "r_map" = r_map, "PPI" = PPI,
-              "pi_hat" = pi_hat, "Lambda_hat" = Lambda_hat, "Theta_hat" = Theta_hat,
+  return(list("cluster" = z_ppm, "z_map" = z_map, "s_map" = s_map, 
+              "r_map" = r_map, "PPI" = PPI, "pi_hat" = pi_hat, 
+              "Lambda_hat" = Lambda_hat, "Theta_hat" = Theta_hat, 
               "z_store" = z_store, "pi_store" = pi_store, "s_store" = s_store, 
-              "r_store" = r_store, "Lambda_store" = Lambda_store, "Theta_store" = Theta_store,
-              "time" = run_time))
+              "r_store" = r_store, "Lambda_store" = Lambda_store, 
+              "Theta_store" = Theta_store, "time" = run_time))
 }
 
 
