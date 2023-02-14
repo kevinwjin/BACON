@@ -33,10 +33,10 @@ simulate_shapes <- function(x, z, n, k, jitter_factor) {
   return(dataset)
 }
 dataset <- simulate_shapes(x = 1000, # 1000 shapes total
-                          z = 10, # 10 clusters
-                          n = 100, # 100 shapes per cluster (could differ per cluster)
-                          k = 20, # Each shape is a 20-gon
-                          jitter_factor = 0.01) # Each cluster has 0.01 jitter
+                           z = 10, # 10 clusters
+                           n = 100, # 100 shapes per cluster (could differ per cluster)
+                           k = 20, # Each shape is a 20-gon
+                           jitter_factor = 0.01) # Each cluster has 0.01 jitter
 
 # Plot each shape as a sanity check
 for (i in seq_along(dataset)) {
