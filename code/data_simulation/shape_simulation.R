@@ -1,5 +1,64 @@
 # Functions for random polygonal chain generation and manipulation
-# Author: Kevin Jin
+# Authors: Kevin Jin, Bryn Brakefield
+
+#' Generate random compositional data by drawing from a truncated Dirichlet
+#' distribution (TDD)
+#'
+#' @description Randomly generates compositional angle or side length vectors
+#' for BACON by drawing from a TDD
+#' 
+#' @param n Number of samples to generate.
+#' @param eta Vector of size k determining balance of the compositional data (
+#' the shapes being generated).
+#' @param a Minimum parameter for the TDD.
+#' @param b Maximum parameter for the TDD.
+#'
+#' @return A n x k matrix containing the compositional data of one cluster of 
+#' data for BACON.
+#' 
+require(Rcpp)
+require(RcppArmadillo)
+#Quantile function for TBD (qtbeta1) and random generator of one sample from
+#TDD (rtdirichlet1)
+sourceCpp(code = '
+  #include <RcppArmadillo.h>
+  // [[Rcpp::depends(RcppArmadillo)]]
+  using namespace arma;
+  // [[Rcpp::export]]
+  double qtbeta1(double p, double alpha, double beta, double a, double b) {
+    double Fa = R::pbeta(a, alpha, beta, true, false);
+    double Fb = R::pbeta(b, alpha, beta, true, false);
+    
+    double u = Fa + p*(Fb - Fa);
+    
+    double quan = R::qbeta(u, alpha, beta, true, false);
+    return quan;
+  }
+  
+  // [[Rcpp::export]]
+  mat rtdirichlet1(vec eta, vec a, vec b) {
+    int k = eta.size();
+    
+    vec u = randu(k);
+    
+    vec x = zeros(k);
+    
+    x[k - 2] = qtbeta1(u[k - 2], eta[k - 2], sum(eta) - eta[k - 2], std::max(a[k - 2], 1 - sum(b) + b[k - 2]), std::min(b[k - 2], 1 - sum(a) + a[k - 2]));
+    
+    for (int i = k - 3; i >= 0; i--) {
+      double a0 = std::max(a[i]/(1 - sum(x(span(i + 1, k - 2)))), 1 - (sum(b) - sum(b(span(i, k - 2))))/(1 - sum(x(span(i + 1, k - 2)))));
+      double b0 = std::min(b[i]/(1 - sum(x(span(i + 1, k - 2)))), 1 - (sum(a) - sum(a(span(i, k - 2))))/(1 - sum(x(span(i + 1, k - 2)))));
+      x[i] = (1 - sum(x(span(i + 1, k - 2))))*qtbeta1(u[i], eta[i], sum(eta) - sum(eta(span(i, k - 2))), a0, b0);
+    }
+    
+    x[k - 1] = 1 - sum(x);
+    
+    return x;
+  }
+')
+# Randomly generates n samples from TDD [k(dimension of TDD) x n matrix]
+rtdirichlet <- function(n, eta, a, b) replicate(n, as.vector(rtdirichlet1(eta, a, b)))
+
 
 #' Generate a random closed polygonal chain
 #'
@@ -17,7 +76,7 @@ generate <- function(k = 3, min = 0, max = 1) {
   colnames(chain) <- c("x", "y")
   chain[, "x"] <- runif(k, min = min, max = max)
   chain[, "y"] <- runif(k, min = min, max = max)
-
+  
   # Compute the centroid of the chain
   centroid <- rowSums(t(chain)) / nrow(chain)
   
@@ -103,15 +162,15 @@ three_point_angle <- function(points) {
   pointA <- points[1, ]
   pointB <- points[2, ]
   pointC <- points[3, ]
-
+  
   x1x2s <- (pointA[1] - pointB[1]) ^ 2
   x1x3s <- (pointA[1] - pointC[1]) ^ 2
   x2x3s <- (pointB[1] - pointC[1]) ^ 2
-
+  
   y1y2s <- (pointA[2] - pointB[2]) ^ 2
   y1y3s <- (pointA[2] - pointC[2]) ^ 2
   y2y3s <- (pointB[2] - pointC[2]) ^ 2
-
+  
   angle <- acos((x1x2s + y1y2s + x2x3s + y2y3s - x1x3s - y1y3s) /
                   (2 * sqrt(x1x2s + y1y2s) * sqrt(x2x3s + y2y3s)))
   
@@ -138,7 +197,7 @@ is_reflex <- function(index, chain) {
   
   # Get offending vertex from the index
   point <- chain[index, ]
-    
+  
   # Cast the offending vertex to sf point object
   point_sf <- st_as_sf(data.frame(t(point)), coords = c("x", "y"))
   
@@ -148,7 +207,7 @@ is_reflex <- function(index, chain) {
   
   # Cast the new polygonal chain to sf polygon object
   chain_sf <- st_sfc(st_polygon(list(new_chain)))
-
+  
   # Determine whether offending vertex is inside the new polygonal chain
   is_reflex <- st_within(point_sf, chain_sf, sparse = FALSE)[, 1]
   
@@ -176,7 +235,7 @@ get_interior_angles <- function(chain) {
     for (i in 1:n) {
       reflex <- c(reflex, is_reflex(i, chain))
     }
-
+    
     # Create empty vector of length k to store interior angles
     angle <- rep(NA, n - 1)
     
@@ -232,10 +291,10 @@ get_side_lengths <- function(chain) {
       side_lengths[i, ] <- side_length
       perimeter <- perimeter + side_length
     }
-  
+    
     # Normalize side lengths by the perimeter to get relative length
     side_lengths <- compositional(side_lengths, perimeter)
-
+    
   } else {
     stop("Argument is not a closed polygonal chain.")
   }
@@ -336,38 +395,38 @@ unit_chain <- function(angles, side_lengths) {
     
     
     # for (i in seq_len(length(angles))) {
-
-      
-      # Rotate the chain
-      side <- side_lengths[2]
-      chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-
-
-      # Take second angle (the second vertex)
-      angle <- sum * angles[3] # Calculate current interior angle
-      angle <- angle * (pi / 180) # R's trigonometric functions use radians
-      angle <- pi - angle
-      rotation <- matrix(c(cos(angle), -sin(angle),
-                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-      side <- side_lengths[3]
-      chain[4, ] <- c(rotation %*% chain[3, ]) + c(side, 0)
-
-      # Take third angle (the third vertex)
-      angle <- sum * angles[4] # Calculate current interior angle
-      angle <- angle * (pi / 180) # R's trigonometric functions use radians
-      rotation <- matrix(c(cos(angle), -sin(angle),
-                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-      side <- side_lengths[4]
-      chain[5, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-
-      # Take fourth angle (the fourth vertex)
-      angle <- sum * angles[5] # Calculate current interior angle
-      angle <- angle * (pi / 180) # R's trigonometric functions use radians
-      rotation <- matrix(c(cos(angle), -sin(angle),
-                           sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-      side <- side_lengths[5]
-      chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-
+    
+    
+    # Rotate the chain
+    side <- side_lengths[2]
+    chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+    
+    
+    # Take second angle (the second vertex)
+    angle <- sum * angles[3] # Calculate current interior angle
+    angle <- angle * (pi / 180) # R's trigonometric functions use radians
+    angle <- pi - angle
+    rotation <- matrix(c(cos(angle), -sin(angle),
+                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    side <- side_lengths[3]
+    chain[4, ] <- c(rotation %*% chain[3, ]) + c(side, 0)
+    
+    # Take third angle (the third vertex)
+    angle <- sum * angles[4] # Calculate current interior angle
+    angle <- angle * (pi / 180) # R's trigonometric functions use radians
+    rotation <- matrix(c(cos(angle), -sin(angle),
+                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    side <- side_lengths[4]
+    chain[5, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+    
+    # Take fourth angle (the fourth vertex)
+    angle <- sum * angles[5] # Calculate current interior angle
+    angle <- angle * (pi / 180) # R's trigonometric functions use radians
+    rotation <- matrix(c(cos(angle), -sin(angle),
+                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
+    side <- side_lengths[5]
+    chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
+    
     # }
     
     # Repeat first row at end to form closed chain
@@ -401,7 +460,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
     
     # Eliminate repeated row for now
     chain <- chain[-nrow(chain), ]
-  
+    
     repeat {
       # Calculate the perimeter of the whole chain via Euclidean distance
       perimeter <- 0
@@ -417,7 +476,7 @@ jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
         radius <- perimeter * factor
         r <- radius * sqrt(runif(1))
         theta <- runif(1) * 2 * pi
-
+        
         # Convert polar to Cartesian coordinates for easier plotting
         chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
         chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
@@ -563,7 +622,7 @@ rotate <- function(chain, angle, clockwise = TRUE) {
     # Rotate chain in place
     chain <- rotation %*% (t(chain) - centroid) + centroid
   }
-
+  
   # Add repeated row back
   chain <- t(chain)
   chain <- rbind(chain, chain[1, ])
