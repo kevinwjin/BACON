@@ -22,7 +22,7 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
   for (int k = 0; k < K; k++){
     alpha(k) = 1;
   }
-  double eta = 0.5;
+  double eta = 0.5; // Truncated Poisson parameter - controls shift value probability
   double omega = 0.5;
   double a_lambda = 0.001;  
   double b_lambda = 0.001;  

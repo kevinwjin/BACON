@@ -2,11 +2,13 @@
 ## BACON   : Bayesian Clustering of n-gons via a Double Dirichlet Mixture Model
 ## Authors : Kevin Jin, Huimin Li, Stephen McKeown, and Qiwei Li
 ## Modified: 2023-02-14
-## Observed data is involved:
-## 1) L: a m-by-n matrix of length proportions, where m is the number of n-gons and n is the number of gons
+## Observed data involved:
+## 1) L: a m-by-n matrix of length proportions, where m is the number of n-gons 
+## and n is the number of gons
+## 2) A: a m-by-n matrix of angle proportions
 ## 2) A: a m-by-n matrix of angle proportions
 ##
-## Parameters are to be estimated:
+## Parameters to be estimated:
 ## 3) z: a vector with m elements indicating cluster allocation parameters
 ## 4) pi: a vector with K elements indicating underlying group proportion
 ## 5) s: a vector with m elements indicating starting vertex indicators
@@ -14,7 +16,7 @@
 ## 7) Lambda: a K-by-n matrix of concentration parameter of L
 ## 8) Theta: a K-by-n matrix of concentration parameter of A
 ## 
-## The main outputs including cluster assignment, estimation of s, and 
+## The main outputs include cluster assignment, estimation of s, and 
 ## estimation of r (posterior probability of inclusion (PPI))
 ################################################################################
 
