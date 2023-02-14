@@ -1,36 +1,37 @@
 # Functions for random polygonal chain generation and manipulation
 # Authors: Kevin Jin, Bryn Brakefield
 
-#' Generate random compositional data by drawing from a truncated Dirichlet
-#' distribution (TDD)
+#' Generate random compositional data for BACON by drawing from a truncated 
+#' Dirichlet distribution (TDD)
 #'
-#' @description Randomly generates compositional angle or side length vectors
-#' for BACON by drawing from a TDD
+#' @description Randomly generates a compositional angle or side length vector
+#' for BACON by drawing from a TDD n times. Implemented in Rcpp, with a 
+#' quantile function for a truncated beta distribution (qtbeta1) and a 
+#' random generator of one sample from a TDD (rtdirichlet1).
 #' 
 #' @param n Number of samples to generate.
 #' @param eta Vector of size k determining balance of the compositional data (
 #' the shapes being generated).
-#' @param a Minimum parameter for the TDD.
-#' @param b Maximum parameter for the TDD.
+#' @param a Vector of size k of minimum parameters for the TDD, usually all 0
+#' @param b Vector of size k of maximum parameters for the TDD; no side may 
+#' exceed 0.5 due to geometric constraints
 #'
-#' @return A n x k matrix containing the compositional data of one cluster of 
-#' data for BACON.
+#' @return A n x k(dimension of TDD) matrix containing the compositional data 
+#' of one cluster of data for BACON.
 #' 
 require(Rcpp)
 require(RcppArmadillo)
-#Quantile function for TBD (qtbeta1) and random generator of one sample from
-#TDD (rtdirichlet1)
 sourceCpp(code = '
   #include <RcppArmadillo.h>
+  
   // [[Rcpp::depends(RcppArmadillo)]]
   using namespace arma;
+  
   // [[Rcpp::export]]
   double qtbeta1(double p, double alpha, double beta, double a, double b) {
     double Fa = R::pbeta(a, alpha, beta, true, false);
     double Fb = R::pbeta(b, alpha, beta, true, false);
-    
     double u = Fa + p*(Fb - Fa);
-    
     double quan = R::qbeta(u, alpha, beta, true, false);
     return quan;
   }
@@ -38,27 +39,21 @@ sourceCpp(code = '
   // [[Rcpp::export]]
   mat rtdirichlet1(vec eta, vec a, vec b) {
     int k = eta.size();
-    
     vec u = randu(k);
-    
     vec x = zeros(k);
-    
     x[k - 2] = qtbeta1(u[k - 2], eta[k - 2], sum(eta) - eta[k - 2], std::max(a[k - 2], 1 - sum(b) + b[k - 2]), std::min(b[k - 2], 1 - sum(a) + a[k - 2]));
-    
     for (int i = k - 3; i >= 0; i--) {
       double a0 = std::max(a[i]/(1 - sum(x(span(i + 1, k - 2)))), 1 - (sum(b) - sum(b(span(i, k - 2))))/(1 - sum(x(span(i + 1, k - 2)))));
       double b0 = std::min(b[i]/(1 - sum(x(span(i + 1, k - 2)))), 1 - (sum(a) - sum(a(span(i, k - 2))))/(1 - sum(x(span(i + 1, k - 2)))));
       x[i] = (1 - sum(x(span(i + 1, k - 2))))*qtbeta1(u[i], eta[i], sum(eta) - sum(eta(span(i, k - 2))), a0, b0);
     }
-    
     x[k - 1] = 1 - sum(x);
-    
     return x;
-  }
-')
-# Randomly generates n samples from TDD [k(dimension of TDD) x n matrix]
-rtdirichlet <- function(n, eta, a, b) replicate(n, as.vector(rtdirichlet1(eta, a, b)))
-
+  }')
+# Randomly generates n samples from TDD
+rtdirichlet <- function(n, eta, a, b) {
+  return(t(replicate(n, as.vector(rtdirichlet1(eta, a, b)))))
+}
 
 #' Generate a random closed polygonal chain
 #'
