@@ -1,4 +1,4 @@
-# Real-world dataset analysis for BACON
+# Real-world dataset preparation for BACON
 # Author: Kevin Jin
 
 #### Load MPEG-7 data ####
@@ -8,10 +8,10 @@ require(parallel)
 
 # Load all images in the folder
 # Retrieve list of all images (Set directory to image folder
-setwd("~/Documents/Repositories/SAFARI-cluster-analysis/data/MPEG-7/images")
+setwd("~/Documents/Repositories/BACON/data/real/MPEG-7/images")
 file_names <- dir(pattern = "gif$") # Choose appropriate image extension
 
-# Convert to polygonal chains
+# Convert MPEG-7 (k = full) to polygonal chains
 extract_chains <- function(img) {
   if (img == "Glas-12.gif") { # Special case of inverted image in MPEG-7
     this_img <- read.image(img, invert = TRUE)
@@ -40,10 +40,11 @@ side_lengths <- matrix(nrow = nrow(chains),
                        byrow = TRUE)
 
 # Extract data
+source("~/Documents/Repositories/BACON/code/data_simulation/shape_simulation.R")
 chains <- t(chains)
 for (i in 1:length(chains)) {
   chain <- cbind(unlist(chains[i, "X"]), unlist(chains[i, "Y"]))
-  chain <- chain[seq(1, dim(chain)[1], length.out = (50 + 1)), ] # Subsample
+  #chain <- chain[seq(1, dim(chain)[1], length.out = (20 + 1)), ] # Subsample
   colnames(chain) <- c("x", "y")
   angles[i, ] <- get_interior_angles(chain)
   side_lengths[i, ] <- get_side_lengths(chain)
@@ -55,8 +56,9 @@ rownames(side_lengths) <- rownames(chains)
 colnames(angles) <- 1:3000
 colnames(side_lengths) <- 1:3000
 
+#### Convert MPEG-7 (already subsampled to k = 20) to polygonal chains ####
+source("~/Documents/Repositories/BACON/code/data_simulation/shape_simulation.R")
 
-#### Convert MPEG-7 to polygonal chains ####
 angles <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
 side_lengths <- matrix(nrow = length(mpeg_7_twenty), ncol = 20, byrow = TRUE)
 
