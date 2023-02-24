@@ -3,6 +3,8 @@
 
 #' Generate random compositional data for BACON by drawing from a truncated 
 #' Dirichlet distribution (TDD)
+#' 
+#' Author: Bryn Brakefield
 #'
 #' @description Randomly generates a compositional angle or side length vector
 #' for BACON by drawing from a TDD n times. Implemented in Rcpp, with a 
