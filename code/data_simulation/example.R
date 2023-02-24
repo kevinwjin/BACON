@@ -1,10 +1,10 @@
-# Shape data simulation for BACON
+# Execute shape data simulation for BACON via two routes
 # Author: Kevin Jin
 
 #### Load data simulation functions ####
-source("~/Documents/Repositories/BACON/code/data_simulation/shape_simulation.R")
+source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
 
-#### Generate simulated data ####
+#### Generate simulated data via polygonal chain simulation ####
 ## Step 1: Simulate z clusters of a total of x k-gons, each cluster having
 ## n k-gons each with modifiable jitter
 
@@ -37,6 +37,39 @@ dataset <- simulate_shapes(x = 1000, # 1000 shapes total
                            n = 100, # 100 shapes per cluster (could differ per cluster)
                            k = 20, # Each shape is a 20-gon
                            jitter_factor = 0.01) # Each cluster has 0.01 jitter
+
+# Plot each shape as a sanity check
+for (i in seq_along(dataset)) {
+  for (shape in dataset[[i]]) {
+    plot(shape, type = "l")
+  }
+}
+
+## Step 2: Extract the shapes' normalized interior angles and side lengths
+angles <- list()
+side_lengths <- list()
+
+for (i in seq_along(dataset)) { # For all clusters
+  a <- list()
+  l <- list()
+  i <- 1 # Loop counter
+  for (shape in dataset[[i]]) { # Within one cluster
+    a[[i]] <- get_interior_angles(shape) # Extract interior angle proportions
+    l[[i]] <- get_side_lengths(shape) # Extract side length proportions
+    i <- i + 1
+  }
+  angles[[length(angles) + 1]] <- a # Add to main angle proportion dataset
+  side_lengths[[length(side_lengths) + 1]] <- l # Add to main side length dataset
+}
+
+#### Generate simulated data via a truncated Dirichlet distribution ####
+## Step 1: Simulate z clusters of a total of x k-gons, each cluster having
+## n k-gons each with modifiable jitter
+
+z1 <- rtdirichlet(n = 10, # Number of samples in a cluster
+                  eta = c(1, 1, 1), # Data balancing parameter
+                  a = c(0, 0, 0), # Minimum parameters for TDD
+                  b = c(0.5, 0.5, 0.5)) # Maximum parameters for TDD
 
 # Plot each shape as a sanity check
 for (i in seq_along(dataset)) {
