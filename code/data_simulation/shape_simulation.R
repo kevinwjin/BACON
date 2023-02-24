@@ -13,8 +13,8 @@
 #' @param eta Vector of size k determining balance of the compositional data (
 #' the shapes being generated).
 #' @param a Vector of size k of minimum parameters for the TDD, usually all 0
-#' @param b Vector of size k of maximum parameters for the TDD; no side may 
-#' exceed 0.5 due to geometric constraints
+#' @param b Vector of size k of maximum parameters for the TDD; no side length
+#' or angle may exceed 0.5 due to geometric constraints
 #'
 #' @return A n x k(dimension of TDD) matrix containing the compositional data 
 #' of one cluster of data for BACON.
@@ -308,130 +308,6 @@ get_side_lengths <- function(chain) {
 compositional <- function(data, sum) {
   normalized <- data / sum
   return(normalized)
-}
-
-#' Reproduce the orientation of a polygonal chain relative interior angles 
-#' and relative side lengths
-#'
-#' @description
-#' Given two numerical vectors of compositional data containing relative 
-#' interior angles and relative side lengths, return a vector of length k
-#' containing which directions to turn when redrawing the unit polygonal chain. 
-#'
-#' @param data A numeric vector of length k containing data.
-#' @param sum A numeric containing the sum of the vector.
-#'
-#' @return A boolean vector of length k containing the directions to turn when
-#' redrawing the polygonal chain.
-turning_orientation <- function(angles, side_lengths) {
-  v1 <- 0
-  v2 <- side_lengths[1]
-  m <- (v2y - v1y) / (v2x - v1x)
-  b <- 0
-  
-  y <- v3y
-  x <- v3x
-  # The first direction will always be left (FALSE) due to anticlockwise
-  # orientation.
-  orientation[1] <- FALSE
-  
-  for (i in seq_len(angles)) {
-    if (y > mx + b) {
-      orientation[i] <- FALSE # Turn left
-    } else {
-      orientation[i] <- TRUE # Turn right
-    }
-  }
-  return(orientation)
-}
-
-#' Reproduce the unit polygonal chain from relative interior angles and relative 
-#' side lengths
-#'
-#' @description
-#' Given two numerical vectors of compositional data containing relative 
-#' interior angles and relative side lengths, redraw the unit polygonal chain, 
-#' centered at the origin.
-#'
-#' @param angles A numeric vector of length n containing interior angles.
-#' @param side_lengths A numeric vector of length n containing relative side lengths.
-#'
-#' @return A (k + 1) x 2 matrix containing the x-y coordinates of the 
-#' vertices of the unit polygonal chain.
-unit_chain <- function(angles, side_lengths) {
-  if (length(angles) == length(side_lengths)) {
-    # x-y coordinates of the vertices of the unit chain, centered at the origin
-    chain <- matrix(0, nrow = length(angles) + 1, ncol = 2, byrow = TRUE)
-    colnames(chain) <- c("x", "y") # For the sf function
-    
-    # Calculate total interior angle for chain in degrees
-    total_angle <- (length(angles) - 2) * 180
-    
-    # Try calculating sides one by one at first
-    side <- side_lengths[1] # Draw side 1 vector (horizontal along the x-axis)
-    chain[2, ] <- c(side, 0)
-    
-    angle <- total_angle * angles[2] * (pi / 180) # Calculate angle 1-2 in radians
-    angle <- pi - angle # Sweep anticlockwise from the x-axis
-    
-    # Rotate side 1 vector anticlockwise and translate into side 2
-    rotation <- matrix(c(cos(angle), -sin(angle),
-                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    side <- t(rotation %*% chain[2, ])
-    side[1, 1] <- side[1, 1] + chain[2, 1] # Currently, side 1 = 2, which is not right... vertex 2's coordinates might be wrong 
-    
-    chain[3, ] <- side
-    
-    # Iterate over all sides
-    for (side in seq_len(length(angles))) {
-      angle <- total_angle * angles[side + 1]
-    }
-    
-    
-    
-    # for (i in seq_len(length(angles))) {
-    
-    
-    # Rotate the chain
-    side <- side_lengths[2]
-    chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-    
-    
-    # Take second angle (the second vertex)
-    angle <- sum * angles[3] # Calculate current interior angle
-    angle <- angle * (pi / 180) # R's trigonometric functions use radians
-    angle <- pi - angle
-    rotation <- matrix(c(cos(angle), -sin(angle),
-                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    side <- side_lengths[3]
-    chain[4, ] <- c(rotation %*% chain[3, ]) + c(side, 0)
-    
-    # Take third angle (the third vertex)
-    angle <- sum * angles[4] # Calculate current interior angle
-    angle <- angle * (pi / 180) # R's trigonometric functions use radians
-    rotation <- matrix(c(cos(angle), -sin(angle),
-                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    side <- side_lengths[4]
-    chain[5, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-    
-    # Take fourth angle (the fourth vertex)
-    angle <- sum * angles[5] # Calculate current interior angle
-    angle <- angle * (pi / 180) # R's trigonometric functions use radians
-    rotation <- matrix(c(cos(angle), -sin(angle),
-                         sin(angle), cos(angle)), ncol = 2, byrow = TRUE)
-    side <- side_lengths[5]
-    chain[3, ] <- c(rotation %*% chain[2, ]) + c(side, 0)
-    
-    # }
-    
-    # Repeat first row at end to form closed chain
-    # chain <- rbind(chain, chain[1, ])
-    
-  } else {
-    stop("Angle and side length vectors differ in length.")
-  }
-  
-  return(chain)
 }
 
 #' Add jitter to a polygonal chain
