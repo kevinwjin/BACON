@@ -4,7 +4,7 @@
 #' Generate random compositional data for BACON by drawing from a truncated 
 #' Dirichlet distribution (TDD)
 #' 
-#' Author: Bryn Brakefield
+#' @author Bryn Brakefield
 #'
 #' @description Randomly generates a compositional angle or side length vector
 #' for BACON by drawing from a TDD n times. Implemented in Rcpp, with a 
@@ -58,6 +58,8 @@ rtdirichlet <- function(n, eta, a, b) {
 }
 
 #' Generate a random closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description Randomly generates the vertices of a closed polygonal chain, 
 #' sorting the vertices by angle sweep from the x-axis.
@@ -94,6 +96,8 @@ generate <- function(k = 3, min = 0, max = 1) {
 }
 
 #' Check whether a polygonal chain is closed
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Determines if the given chain of coordinates is a polygonal chain or not
@@ -114,6 +118,8 @@ is_closed <- function(chain) {
 }
 
 #' Reverse the orientation of a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Reverse the orientation, or matrix row order, of a closed polygonal chain.
@@ -133,6 +139,8 @@ reverse_orientation <- function(chain) {
 }
 
 #' Calculate the sum of the interior angles of a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Given a closed polygonal chain, return the sum of the interior angles.
@@ -146,6 +154,8 @@ sum_interior_angles <- function(chain) {
 }
 
 #' Calculate the angle between three points
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Given a set of three points, calculate the angle between them using the 
@@ -175,6 +185,8 @@ three_point_angle <- function(points) {
 }
 
 #' Check whether a vertex produces a reflex angle in a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Given the index of a vertex within a closed polygonal chain and the chain 
@@ -212,6 +224,8 @@ is_reflex <- function(index, chain) {
 }
 
 #' Calculate the relative interior angles of a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' If the given chain of coordinates is a closed polygonal chain, 
@@ -259,6 +273,8 @@ get_interior_angles <- function(chain) {
 }
 
 #' Calculate the relative side lengths of a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' If the given chain of coordinates is a closed polygonal chain, 
@@ -299,6 +315,8 @@ get_side_lengths <- function(chain) {
 }
 
 #' Normalize a numerical vector by its total to produce its compositional data
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Given a numerical vector, return a vector of its relative compositional data.
@@ -312,7 +330,50 @@ compositional <- function(data, sum) {
   return(normalized)
 }
 
+#' Reconstruct all possible unit polygonal chains given relative interior 
+#' angles and relative side lengths
+#' 
+#' @author Bryn Brakefield
+#'
+#' @description
+#' Given two numerical vectors of compositional data containing relative 
+#' interior angles and relative side lengths, reconstruct all possible 
+#' unit polygonal chains.
+#'
+#' @param a A numeric vector of length n containing interior angles.
+#' @param l A numeric vector of length n containing relative side lengths.
+#'
+#' @return A list or (k + 1) x 2 matrix containing the x-y coordinates of the 
+#' vertices of the unit polygonal chain.
+reconstruct <- function(a, l) {
+  n <- length(a)
+  pc0 <- expand.grid(replicate(n - 1, 0:1, simplify = FALSE))
+  pc <- vector(mode = "list", length = 2^(n - 1))
+  for (i in 1:(2^(n - 1))) {
+    V <- matrix(0, 2, n + 1)
+    V[1, 2] <- l[1]
+    theta <- rep(0, n + 1)
+    for (j in 1:(n - 1)) {
+      index <- j + 1
+      if (pc0[i, j] == 1) {
+        theta[index] <- theta[index - 1] + (pi - a[index])
+        V[, index + 1] <- c(l[index]*cos(theta[index]), 
+                            l[index]*sin(theta[index])) + V[, index]
+      }
+      if (pc0[i, j] == 0) {
+        theta[index] <- theta[index - 1] - (pi - a[index])
+        V[, index + 1] <- c(l[index]*cos(theta[index]), 
+                            l[index]*sin(theta[index])) + V[, index]
+      }
+    }
+    pc[[i]] <- V
+  }
+  return(pc)
+}
+
 #' Add jitter to a polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description Randomizes the vertices or angles of a polygonal chain. If
 #' output is not a valid polygonal chain, re-jitter a maximum of 10 times 
@@ -320,63 +381,57 @@ compositional <- function(data, sum) {
 #'
 #' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the polygonal chain.
-#' @param random String containing polygon parameter to randomize.
 #' @param factor Floating point number from 0 to 1 exclusive as a percentage
 #' of the perimeter of the polygonal chain to randomize by.
 #'
 #' @return A (k + 1) x 2 matrix containing the x-y coordinates of the vertices 
 #' of the polygonal chain.
-jitter <- function(chain, random = c("vertices", "angles"), factor = 0.01) {
-  if (random == "vertices") {
-    loops <- 0 # Jitter loop counter
-    max_loops <- 10 # Maximum jitter loops
-    
-    # Eliminate repeated row for now
-    chain <- chain[-nrow(chain), ]
-    
-    repeat {
-      # Calculate the perimeter of the whole chain via Euclidean distance
-      perimeter <- 0
-      for (i in seq_len(nrow(chain))) {
-        j <- i + 1
-        if (i == (nrow(chain))) {
-          j <- 1 # Loop back to first vertex once end of chain is reached
-        }
-        perimeter <- perimeter + sqrt(sum((chain[i, ] - chain[j, ]) ^ 2))
+jitter <- function(chain, factor = 0.01) {
+  loops <- 0 # Jitter loop counter
+  max_loops <- 10 # Maximum jitter loops
+  
+  # Eliminate repeated row for now
+  chain <- chain[-nrow(chain), ]
+  
+  repeat {
+    # Calculate the perimeter of the whole chain via Euclidean distance
+    perimeter <- 0
+    for (i in seq_len(nrow(chain))) {
+      j <- i + 1
+      if (i == (nrow(chain))) {
+        j <- 1 # Loop back to first vertex once end of chain is reached
       }
-      # Choose a random point in a radius of uncertainty around the vertex
-      for (n in seq_len(nrow(chain))) {
-        radius <- perimeter * factor
-        r <- radius * sqrt(runif(1))
-        theta <- runif(1) * 2 * pi
-        
-        # Convert polar to Cartesian coordinates for easier plotting
-        chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
-        chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
-      }
-      
-      # If jittered output is not a chain, then re-jitter at most max_loops times
-      if (is_closed(chain) == FALSE || loops == max_loops) {
-        if (loops == max_loops) {
-          warning("Could not create valid chain in 10 attempts; please lower the jitter factor.")
-        }
-        break
-      } else {
-        loops <- loops + 1
-      }
+      perimeter <- perimeter + sqrt(sum((chain[i, ] - chain[j, ]) ^ 2))
     }
-    # Add repeated row back
-    chain <- rbind(chain, chain[1, ])
+    # Choose a random point in a radius of uncertainty around the vertex
+    for (n in seq_len(nrow(chain))) {
+      radius <- perimeter * factor
+      r <- radius * sqrt(runif(1))
+      theta <- runif(1) * 2 * pi
+      
+      # Convert polar to Cartesian coordinates for easier plotting
+      chain[n, 1] <- chain[n, 1] + r * cos(theta) # Newly randomized x
+      chain[n, 2] <- chain[n, 2] + r * sin(theta) # Newly randomized y
+    }
     
-  } else if (random == "angles") {
-    stop("Not implemented yet.")
-  } else {
-    stop("Invalid or no randomization argument provided.")
+    # If jittered output is not a chain, then re-jitter at most max_loops times
+    if (is_closed(chain) == FALSE || loops == max_loops) {
+      if (loops == max_loops) {
+        warning("Could not create valid chain in 10 attempts; please lower the jitter factor.")
+      }
+      break
+    } else {
+      loops <- loops + 1
+    }
   }
+  # Add repeated row back
+  chain <- rbind(chain, chain[1, ])
   return(chain)
 }
 
 #' Translate a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Moves every point of a polygonal chain by the same distance in a given
@@ -398,6 +453,8 @@ translate <- function(chain, x = 0, y = 0) {
 }
 
 #' Dilate a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Scales the size of a polygonal chain to be greater or smaller, centered
@@ -422,6 +479,8 @@ dilate <- function(chain, factor = 1) {
 }
 
 #' Reflect a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Reflects a polygonal chain vertically or horizontally.
@@ -458,6 +517,8 @@ reflect <- function(chain, direction = c("horizontal", "vertical")) {
 }
 
 #' Rotate a closed polygonal chain
+#' 
+#' @author Kevin Jin
 #'
 #' @description
 #' Rotates a polygonal chain by a specified angle about its centroid.
