@@ -25,7 +25,7 @@ simulate_shapes <- function(x, z, n, k, jitter_factor) {
     # Apply jitter to each k-gon
     for (i in seq_along(shapes)) {
       shapes[[i]] <- 
-        jitter(shapes[[i]], random = c("vertices"), factor = jitter_factor)
+        jitter(shapes[[i]], factor = jitter_factor)
     }
     # Add to main shape dataset
     dataset[[length(dataset) + 1]] <- shapes
