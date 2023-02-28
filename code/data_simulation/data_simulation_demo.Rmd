@@ -1,0 +1,329 @@
+---
+title: "Data Simulation and Mapping Demo"
+author: "Kevin Jin"
+date: "2023-02-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Generate simulated data via polygonal chain simulation
+
+Load essential functions for simulating data.
+```{r}
+source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
+```
+
+Step 1: Define a function to generate shapes.
+
+```{r}
+# x: Total number of shapes in the dataset
+# z: Number of clusters in the shape dataset
+# n: Number of shapes per cluster
+# k: Number of vertices in each shape
+# jitter_factor: Amount of jitter to apply to each shape within a cluster
+simulate_shapes <- function(x, z, n, k, jitter_factor) {
+  dataset <- list()
+  for (cluster in 1:z) {
+    shape <- generate(k = k)
+    shapes <- replicate(n, shape, simplify = FALSE)
+    for (i in seq_along(shapes)) {
+      shapes[[i]] <- 
+        jitter(shapes[[i]], factor = jitter_factor)
+    }
+    dataset[[length(dataset) + 1]] <- shapes
+  }
+  return(dataset)
+}
+```
+
+Step 2: Simulate 5 clusters of a total of 50 20-gons, each cluster having 
+10 k-gons each with 0.01 jitter (amount of jitter is modifiable).
+
+```{r}
+x <- 50
+z <- 5
+n <- 10
+k <- 20
+jitter_factor <- 0.01
+dataset <- simulate_shapes(x, z, n, k, jitter_factor)
+```
+
+
+Step 3: For a sanity check, plot each shape to visualize it.
+```{r, echo=FALSE}
+for (i in seq_along(dataset)) {
+  for (shape in dataset[[i]]) {
+    plot(shape, type = "l")
+  }
+}
+```
+
+Step 4: Extract side length and angle proportions as the data to be clustered. 
+Creates a nested list for angle proportions and side length proportions.
+List structure follows:
+
+1. Cluster 1
++ Shape 1
++ Shape 2
+...
++ Shape 100
+2. Cluster 2
+...
+3. Cluster 10
+```{r}
+angles <- list()
+side_lengths <- list()
+
+for (i in seq_along(dataset)) {
+  a <- list()
+  l <- list()
+  i <- 1
+  for (shape in dataset[[i]]) {
+    a[[i]] <- get_interior_angles(shape)
+    l[[i]] <- get_side_lengths(shape)
+    i <- i + 1
+  }
+  angles[[length(angles) + 1]] <- a
+  side_lengths[[length(side_lengths) + 1]] <- l
+}
+```
+
+Step 5: Test BACON clustering algorithm.
+
+```{r}
+setwd("~/Documents/Repositories/BACON/code/clustering/")
+source("bacon.R")
+```
+
+```{r}
+L <- matrix(nrow = x, ncol = k, byrow = TRUE)
+A <- matrix(nrow = x, ncol = k, byrow = TRUE)
+
+#for (i in seq_along(dataset)) {
+#  for (j in seq_along(dataset[[i]])) {
+#    A[j, ] <- unlist(angles[[i]][j])
+#    L[j, ] <- unlist(side_lengths[[i]][j])
+#  }
+#}
+```
+
+```{r}
+res <- bacon(side_lengths, 
+             angles, 
+             K = z, 
+             weight = 1,
+             estimate.s = TRUE, 
+             estimate.r = TRUE,
+             iter = 5000, 
+             burn = 2500)
+res$cluster
+res$s_map
+res$r_map
+
+## Check convergence
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+
+## Check clustering accuracy
+mclust::adjustedRandIndex(res$cluster, z)
+```
+
+Step 6: Reconstruct all possible unit polygonal chains (open and closed) for 
+each shape from the side length and angle proportions. 
+
+**WARNING: Computationally intensive!**
+Number of possible shapes calculated increases exponentially with the number
+of vertices per shape and the number of shapes in the dataset.
+
+```{r}
+for (i in seq_along(dataset)) {
+  for (j in seq_along(dataset[[i]])) {
+    assign(paste0("pc_", j), reconstruct(unlist(angles[[i]][j]), 
+                                         unlist(side_lengths[[i]][j])))
+  }
+}
+```
+
+Step 7: Filter out the non-closed polygonal chains, keeping the closed chains
+only. Plot each of the closed polygonal chains.
+
+To plot from the main list, run: `plot(t(pc_1[[1]]))`
+
+To extract one of the closed polygon plots, use `$` after `closed_chain_plot`
+to index the list.
+Example: `closed_chain_plot$plot1`
+
+```{r}
+# Number of vertices in polygonal chain of interest
+n <- length(dataset)
+
+# Store closed chains
+close_chain <- NA
+
+# Construct the R command that will filter out all non-closed chains and save plots of the closed ones
+list_name <- paste0("closed_chain_plot = list(")
+for (i in 1:2^(n - 1)) {
+  # If the chain is closed (to 7 decimal places)
+  if (pc[[i]][1,1] == round(pc[[i]][1, n + 1], digits = 7) &&
+      pc[[i]][2,1] == round(pc[[i]][2, n + 1], digits = 7)) {
+    
+    # Add to closed-chain list
+    close_chain <- c(close_chain, i)
+    
+    # Plot the closed chain
+    plot(pc[[i]][1, 1:(n + 1)], pc[[i]][2, 1:(n + 1)], type = "l", 
+         main = "Closed polygonal chain", xlab = "x", ylab = "y")
+    
+    # Add a "recordPlot" call to the command
+    tmp <- recordPlot()
+    
+    # Refer to "recordPlot" as "plot"
+    tmp_name <- paste0("plot", i)
+    assign(tmp_name, tmp)
+    
+    # A
+    list_name_tmp <- paste0("'", tmp_name, "' = ", tmp_name, ", ")
+    
+    # Save the name of the current plot
+    list_name <- paste0(list_name, list_name_tmp)
+  }
+}
+library(stringr)
+
+# Terminate list by removing whitespace and comma
+list_name <- str_sub(list_name, 1, str_length(list_name) - 2)
+
+# Add other parenthesis and save R command
+eval_text <- paste0(list_name, ")")
+
+# Evaluate R command and save a list of plots of closed polygonal chains
+eval(parse(text = eval_text))
+```
+
+# Generate simulated data by drawing from a truncated Dirichlet distribution.
+
+Load essential functions for simulating data.
+```{r}
+source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
+```
+
+Step 1: Simulate side length and angle proportions for 17 3-gons (Reverse
+mapping function seems to add an extra vertex? Is it because it's not closed?):
+
+```{r}
+# Generate side length proportions for a dataset of 3-gons
+z1_length <- 10
+z2_length <- 5
+z3_length <- 2
+z1 <- rtdirichlet(n = 10, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+z2 <- rtdirichlet(n = 5, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+z3 <- rtdirichlet(n = 2, eta = c(5, 2, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+side_lengths <- rbind(z1, z2, z3)
+z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length))
+
+# Generate angle proportions for a dataset of 3-gons
+z1_length <- 10
+z2_length <- 5
+z3_length <- 2
+z1 <- rtdirichlet(n = 10, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+z2 <- rtdirichlet(n = 5, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+z3 <- rtdirichlet(n = 2, eta = c(1, 2, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+angles <- rbind(z1, z2, z3)
+z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length))
+```
+
+Step 2: Test BACON clustering algorithm.
+
+```{r}
+setwd("~/Documents/Repositories/BACON/code/clustering/")
+source("bacon.R")
+```
+
+```{r}
+res <- bacon(side_lengths, 
+             angles, 
+             K = 3, 
+             weight = 1,
+             estimate.s = TRUE, 
+             estimate.r = TRUE,
+             iter = 5000, 
+             burn = 2500)
+res$cluster
+res$s_map
+res$r_map
+
+## Check convergence
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+
+## Check clustering accuracy
+mclust::adjustedRandIndex(res$cluster, z)
+```
+
+Step 3: Reconstruct all possible unit polygonal chains (open and closed) for 
+each shape from the side length and angle proportions. 
+
+```{r}
+for (i in 1:nrow(angles)) {
+  assign(paste0("pc_", i), reconstruct(angles[i, ], side_lengths[i, ]))
+}
+```
+
+Step 4: Filter out the non-closed polygonal chains, keeping the closed chains
+only. Plot each of the closed polygonal chains.
+
+To extract one of the closed polygon plots, use `$` after `closed_chain_plot`
+to index the list.
+Example: `closed_chain_plot$plot1`
+
+```{r}
+pc <- pc_1
+
+# Number of vertices in polygonal chain of interest
+n <- ncol(angles)
+
+# Store closed chains
+close_chain <- NA
+
+# Construct the R command that will filter out all non-closed chains and save plots of the closed ones
+list_name <- paste0("closed_chain_plot = list(")
+for (i in 1:2^(n - 1)) {
+  # If the chain is closed (to 7 decimal places)
+  if (pc[[i]][1,1] == round(pc[[i]][1, n + 1], digits = 7) &&
+      pc[[i]][2,1] == round(pc[[i]][2, n + 1], digits = 7)) {
+    
+    # Add to closed-chain list
+    close_chain <- c(close_chain, i)
+    
+    # Plot the closed chain
+    plot(pc[[i]][1, 1:(n + 1)], pc[[i]][2, 1:(n + 1)], type = "l", 
+         main = "Closed polygonal chain", xlab = "x", ylab = "y")
+    
+    # Add a "recordPlot" call to the command
+    tmp <- recordPlot()
+    
+    # Refer to "recordPlot" as "plot"
+    tmp_name <- paste0("plot", i)
+    assign(tmp_name, tmp)
+    
+    # A
+    list_name_tmp <- paste0("'", tmp_name, "' = ", tmp_name, ", ")
+    
+    # Save the name of the current plot
+    list_name <- paste0(list_name, list_name_tmp)
+  }
+}
+library(stringr)
+
+# Terminate list by removing whitespace and comma
+list_name <- str_sub(list_name, 1, str_length(list_name) - 2)
+
+# Add other parenthesis and save R command
+eval_text <- paste0(list_name, ")")
+
+# Evaluate R command and save a list of plots of closed polygonal chains
+eval(parse(text = eval_text))
+```
