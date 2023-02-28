@@ -109,7 +109,7 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' chain.
 is_closed <- function(chain) {
   # Order of vertices must remain the same and might be disturbed after jitter
-  if (identical(chain[1, ], chain[nrow(chain), ])) {
+  if (identical(chain[1, ], round(chain[nrow(chain), ], digits = 30))) {
     is_closed <- TRUE
   } else {
     is_closed <- FALSE
@@ -330,7 +330,7 @@ compositional <- function(data, sum) {
   return(normalized)
 }
 
-#' Reconstruct all possible unit polygonal chains given relative interior 
+#' Reconstruct all possible closed unit polygonal chains given relative interior 
 #' angles and relative side lengths
 #' 
 #' @author Bryn Brakefield
@@ -338,7 +338,7 @@ compositional <- function(data, sum) {
 #' @description
 #' Given two numerical vectors of compositional data containing relative 
 #' interior angles and relative side lengths, reconstruct all possible 
-#' unit polygonal chains.
+#' unit polygonal chains and return the closed ones.
 #'
 #' @param a A numeric vector of length n containing interior angles.
 #' @param l A numeric vector of length n containing relative side lengths.
@@ -346,7 +346,19 @@ compositional <- function(data, sum) {
 #' @return A list or (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the unit polygonal chain.
 reconstruct <- function(a, l) {
+  # Get number of vertices
   n <- length(a)
+  
+  # Convert normalized compositional data back to radians
+  a <- a * (n - 2) * pi
+  
+  # If the shape is a polygon, then ignore the provided side lengths and
+  # manually calculate using the law of sines
+  if (n == 3) {
+    l <- sin(a) / sum(sin(a))
+    l <- c(l[3], l[-3]) # Change ordering to be correct
+  }
+  
   pc0 <- expand.grid(replicate(n - 1, 0:1, simplify = FALSE))
   pc <- vector(mode = "list", length = 2^(n - 1))
   for (i in 1:(2^(n - 1))) {
@@ -368,7 +380,18 @@ reconstruct <- function(a, l) {
     }
     pc[[i]] <- V
   }
-  return(pc)
+  
+  # Check if chains are closed 
+  pc_closed <- list()
+  for (i in 1:length(pc)) {
+    if (is_closed(pc[[i]])) {
+      pc_closed <- c(pc_closed, pc[[i]])
+    } else {
+      next
+    }
+  }
+  
+  return(pc_closed)
 }
 
 #' Add jitter to a polygonal chain
