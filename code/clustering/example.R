@@ -1,4 +1,4 @@
-#### Run BACON on demo data. ####
+#### Run BACON on Huimin's demo data. ####
 ## The following guide demonstrates clustering of exmaple data using BACON.
 ## BACON requires three inputs:
 ## 1. L: a m-by-n matrix of length proportions, where m is the number of n-gons 
@@ -122,3 +122,31 @@ plot(rowSums(res$s_store == 0), type = "l",
 ## Check clustering accuracy
 mclust::adjustedRandIndex(res$cluster, angles[, 21]) 
 # ARI: 0.359 at 20000 iter and 2000 burn-in
+
+#### Run BACON on MPEG-7 data. ####
+## Load required packages
+setwd("~/Documents/Repositories/BACON/code/clustering")
+source("bacon.R")
+
+## Load MPEG-7 data
+setwd("~/Documents/Repositories/BACON/data/real/MPEG-7")
+load("MPEG-7_k=20.Rdata")
+head(side_lengths)
+head(angles)
+
+## Run the model
+res <- bacon(side_lengths, 
+             angles, 
+             K = 20,
+             weight = 0, 
+             estimate.s = FALSE, 
+             estimate.r = FALSE,
+             iter = 10000, 
+             burn = 5000)
+
+## Check convergence
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+
+## Check clustering accuracy
+mclust::adjustedRandIndex(res$cluster, phenotype)
