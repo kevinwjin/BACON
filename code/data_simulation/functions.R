@@ -108,8 +108,11 @@ generate <- function(k = 3, min = 0, max = 1) {
 #' @return A logical value indicating whether the given chain is a polygonal
 #' chain.
 is_closed <- function(chain) {
-  # Order of vertices must remain the same and might be disturbed after jitter
-  if (identical(chain[1, ], round(chain[nrow(chain), ], digits = 30))) {
+  # Order of vertices must remain the same and might be disturbed after jitter;
+  # Also, you must allow some room for error because the reconstruct() function
+  # and side length/angle proportion extraction processes might introduce 
+  # error.
+  if (identical(chain[1, ], round(chain[nrow(chain), ], digits = 10))) {
     is_closed <- TRUE
   } else {
     is_closed <- FALSE
@@ -333,7 +336,7 @@ compositional <- function(data, sum) {
 #' Reconstruct all possible closed unit polygonal chains given relative interior 
 #' angles and relative side lengths
 #' 
-#' @author Bryn Brakefield
+#' @author Bryn Brakefield, Kevin Jin
 #'
 #' @description
 #' Given two numerical vectors of compositional data containing relative 
@@ -349,11 +352,11 @@ reconstruct <- function(a, l) {
   # Get number of vertices
   n <- length(a)
   
-  # Convert normalized compositional data back to radians
+  # Convert compositional angle proportions back to radians
   a <- a * (n - 2) * pi
   
-  # If the shape is a polygon, then ignore the provided side lengths and
-  # manually calculate using the law of sines
+  # If the shape is a triangle, then ignore the provided side length
+  # proportions and manually recalculate using the law of sines
   if (n == 3) {
     l <- sin(a) / sum(sin(a))
     l <- c(l[3], l[-3]) # Change ordering to be correct
@@ -361,7 +364,7 @@ reconstruct <- function(a, l) {
   
   pc0 <- expand.grid(replicate(n - 1, 0:1, simplify = FALSE))
   pc <- vector(mode = "list", length = 2^(n - 1))
-  for (i in 1:(2^(n - 1))) {
+  for (i in 1:(2 ^ (n - 1))) {
     V <- matrix(0, 2, n + 1)
     V[1, 2] <- l[1]
     theta <- rep(0, n + 1)
@@ -369,23 +372,25 @@ reconstruct <- function(a, l) {
       index <- j + 1
       if (pc0[i, j] == 1) {
         theta[index] <- theta[index - 1] + (pi - a[index])
-        V[, index + 1] <- c(l[index]*cos(theta[index]), 
-                            l[index]*sin(theta[index])) + V[, index]
+        V[, index + 1] <- c(l[index] * cos(theta[index]), 
+                            l[index] * sin(theta[index])) + V[, index]
       }
       if (pc0[i, j] == 0) {
         theta[index] <- theta[index - 1] - (pi - a[index])
-        V[, index + 1] <- c(l[index]*cos(theta[index]), 
-                            l[index]*sin(theta[index])) + V[, index]
+        V[, index + 1] <- c(l[index] * cos(theta[index]), 
+                            l[index] * sin(theta[index])) + V[, index]
       }
     }
     pc[[i]] <- V
   }
   
-  # Check if chains are closed 
+  # Create new list of closed chains (check is rounded to 10 digits)
   pc_closed <- list()
   for (i in 1:length(pc)) {
-    if (is_closed(pc[[i]])) {
-      pc_closed <- c(pc_closed, pc[[i]])
+    if (is_closed(t(pc[[i]]))) {
+      # Make it plottable
+      #colnames(t(pc[[1]])) <- c("x", "y")
+      pc_closed[[length(pc_closed)+1]] <- list(t(pc[[1]]))
     } else {
       next
     }
