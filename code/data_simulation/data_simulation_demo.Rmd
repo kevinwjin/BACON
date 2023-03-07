@@ -131,8 +131,8 @@ plot(rowSums(res$s_store == 0), type = "l",
 mclust::adjustedRandIndex(res$cluster, z)
 ```
 
-Step 6: Reconstruct all possible unit polygonal chains (open and closed) for 
-each shape from the side length and angle proportions. 
+Step 6: Reconstruct all closed unit polygonal chains for each shape from the 
+side length and angle proportions. 
 
 **WARNING: Computationally intensive!**
 Number of possible shapes calculated increases exponentially with the number
@@ -263,67 +263,11 @@ plot(rowSums(res$s_store == 0), type = "l",
 mclust::adjustedRandIndex(res$cluster, z)
 ```
 
-Step 3: Reconstruct all possible unit polygonal chains (open and closed) for 
-each shape from the side length and angle proportions. 
+Step 3: Reconstruct all closed unit polygonal chains for each shape from the 
+side length and angle proportions. 
 
 ```{r}
 for (i in 1:nrow(angles)) {
   assign(paste0("pc_", i), reconstruct(angles[i, ], side_lengths[i, ]))
 }
-```
-
-Step 4: Filter out the non-closed polygonal chains, keeping the closed chains
-only. Plot each of the closed polygonal chains.
-
-To extract one of the closed polygon plots, use `$` after `closed_chain_plot`
-to index the list.
-Example: `closed_chain_plot$plot1`
-
-```{r}
-pc <- pc_1
-
-# Number of vertices in polygonal chain of interest
-n <- ncol(angles)
-
-# Store closed chains
-close_chain <- NA
-
-# Construct the R command that will filter out all non-closed chains and save plots of the closed ones
-list_name <- paste0("closed_chain_plot = list(")
-for (i in 1:2^(n - 1)) {
-  # If the chain is closed (to 7 decimal places)
-  if (pc[[i]][1,1] == round(pc[[i]][1, n + 1], digits = 7) &&
-      pc[[i]][2,1] == round(pc[[i]][2, n + 1], digits = 7)) {
-    
-    # Add to closed-chain list
-    close_chain <- c(close_chain, i)
-    
-    # Plot the closed chain
-    plot(pc[[i]][1, 1:(n + 1)], pc[[i]][2, 1:(n + 1)], type = "l", 
-         main = "Closed polygonal chain", xlab = "x", ylab = "y")
-    
-    # Add a "recordPlot" call to the command
-    tmp <- recordPlot()
-    
-    # Refer to "recordPlot" as "plot"
-    tmp_name <- paste0("plot", i)
-    assign(tmp_name, tmp)
-    
-    # A
-    list_name_tmp <- paste0("'", tmp_name, "' = ", tmp_name, ", ")
-    
-    # Save the name of the current plot
-    list_name <- paste0(list_name, list_name_tmp)
-  }
-}
-library(stringr)
-
-# Terminate list by removing whitespace and comma
-list_name <- str_sub(list_name, 1, str_length(list_name) - 2)
-
-# Add other parenthesis and save R command
-eval_text <- paste0(list_name, ")")
-
-# Evaluate R command and save a list of plots of closed polygonal chains
-eval(parse(text = eval_text))
 ```
