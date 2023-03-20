@@ -104,18 +104,28 @@ generate <- function(k = 3, min = 0, max = 1) {
 #'
 #' @param chain A (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the polygonal chain.
+#' @param reconstruct A boolean indicating whether the calling function is
+#' the mapping function, which requires a rounding in the closed chain check.
 #'
 #' @return A logical value indicating whether the given chain is a polygonal
 #' chain.
-is_closed <- function(chain) {
-  # Order of vertices must remain the same and might be disturbed after jitter;
-  # Also, you must allow some room for error because the reconstruct() function
-  # and side length/angle proportion extraction processes might introduce 
-  # error.
-  if (identical(chain[1, ], round(chain[nrow(chain), ], digits = 10))) {
-    is_closed <- TRUE
+is_closed <- function(chain, reconstruct) {
+  # Order of vertices must remain the same and might be disturbed after jitter.
+  if (reconstruct) {
+    # Also, you must allow some room for error because the reconstruct() 
+    # functionand side length/angle proportion extraction processes might 
+    # introduce error.
+    if (identical(chain[1, ], round(chain[nrow(chain), ], digits = 10))) {
+      is_closed <- TRUE
+    } else {
+      is_closed <- FALSE
+    }
   } else {
-    is_closed <- FALSE
+    if (identical(chain[1, ], chain[nrow(chain), ])) {
+      is_closed <- TRUE
+    } else {
+      is_closed <- FALSE
+    }
   }
   return(is_closed)
 }
@@ -132,7 +142,7 @@ is_closed <- function(chain) {
 #'
 #' @return The same polygonal chain, except now in reverse orientation.
 reverse_orientation <- function(chain) {
-  if (is_closed(chain)) {
+  if (is_closed(chain, reconstruct = FALSE)) {
     # Reverse clockwise orientation
     chain <- chain[nrow(chain):1, ]
   } else {
@@ -240,7 +250,7 @@ is_reflex <- function(index, chain) {
 #' @return A vector of length k containing the interior angles of the 
 #' vertices of the polygonal chain.
 get_interior_angles <- function(chain) {
-  if (is_closed(chain)) {
+  if (is_closed(chain, reconstruct = FALSE)) {
     # Number of vertices/rows is (k + 1) because the chain is closed
     n <- nrow(chain)
     
@@ -289,7 +299,7 @@ get_interior_angles <- function(chain) {
 #' @return A vector of length k containing the side lengths of the polygonal 
 #' chain.
 get_side_lengths <- function(chain) {
-  if (is_closed(chain)) {
+  if (is_closed(chain, reconstruct = FALSE)) {
     # Eliminate repeated row for now
     chain <- chain[-nrow(chain), ]
     
@@ -387,10 +397,8 @@ reconstruct <- function(a, l) {
   # Create new list of closed chains (check is rounded to 10 digits)
   pc_closed <- list()
   for (i in 1:length(pc)) {
-    if (is_closed(t(pc[[i]]))) {
-      # Make it plottable
-      #colnames(t(pc[[1]])) <- c("x", "y")
-      pc_closed[[length(pc_closed)+1]] <- list(t(pc[[1]]))
+    if (is_closed(t(pc[[i]], reconstruct = TRUE))) {
+      pc_closed[[length(pc_closed) + 1]] <- list(t(pc[[1]]))
     } else {
       next
     }
@@ -443,7 +451,7 @@ jitter <- function(chain, factor = 0.01) {
     }
     
     # If jittered output is not a chain, then re-jitter at most max_loops times
-    if (is_closed(chain) == FALSE || loops == max_loops) {
+    if (is_closed(chain, reconstruct = FALSE) == FALSE || loops == max_loops) {
       if (loops == max_loops) {
         warning("Could not create valid chain in 10 attempts; please lower the jitter factor.")
       }
