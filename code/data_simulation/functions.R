@@ -397,7 +397,7 @@ reconstruct <- function(a, l) {
   # Create new list of closed chains (check is rounded to 10 digits)
   pc_closed <- list()
   for (i in 1:length(pc)) {
-    if (is_closed(t(pc[[i]], reconstruct = TRUE))) {
+    if (is_closed(t(pc[[i]]), reconstruct = TRUE)) {
       pc_closed[[length(pc_closed) + 1]] <- list(t(pc[[1]]))
     } else {
       next
