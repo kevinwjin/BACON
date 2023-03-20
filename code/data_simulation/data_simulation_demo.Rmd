@@ -99,26 +99,35 @@ source("bacon.R")
 ```
 
 ```{r}
+# Unlist angles and side lengths for BACON
 L <- matrix(nrow = x, ncol = k, byrow = TRUE)
 A <- matrix(nrow = x, ncol = k, byrow = TRUE)
 
-#for (i in seq_along(dataset)) {
-#  for (j in seq_along(dataset[[i]])) {
-#    A[j, ] <- unlist(angles[[i]][j])
-#    L[j, ] <- unlist(side_lengths[[i]][j])
-#  }
-#}
+counter <- 1
+for (i in seq_along(dataset)) {
+  for (j in seq_along(dataset[[i]])) {
+    A[counter, ] <- unlist(angles[[i]][j])
+    L[counter, ] <- unlist(side_lengths[[i]][j])
+    counter <- counter + 1
+  }
+}
 ```
 
 ```{r}
-res <- bacon(side_lengths, 
-             angles, 
+# Clean up variables
+rm(angles, side_lengths, a, l, dataset, shape)
+```
+
+```{r}
+# Cluster dataset with BACON
+res <- bacon(L, 
+             A, 
              K = z, 
              weight = 1,
              estimate.s = TRUE, 
              estimate.r = TRUE,
-             iter = 5000, 
-             burn = 2500)
+             iter = 10000, 
+             burn = 5000)
 res$cluster
 res$s_map
 res$r_map
@@ -128,7 +137,8 @@ plot(rowSums(res$s_store == 0), type = "l",
      ylab = "Number of samples with starting point as 0", xlab = "Iteration")
 
 ## Check clustering accuracy
-mclust::adjustedRandIndex(res$cluster, z)
+ground_truth <- rep(1:z, each = n)
+mclust::adjustedRandIndex(res$cluster, ground_truth)
 ```
 
 Step 6: Reconstruct all closed unit polygonal chains for each shape from the 
@@ -218,21 +228,26 @@ mapping function seems to add an extra vertex? Is it because it's not closed?):
 z1_length <- 10
 z2_length <- 5
 z3_length <- 2
-z1 <- rtdirichlet(n = 10, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
-z2 <- rtdirichlet(n = 5, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
-z3 <- rtdirichlet(n = 2, eta = c(5, 2, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
-side_lengths <- rbind(z1, z2, z3)
-z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length))
+z4_length <- 29
+z1 <- rtdirichlet(n = z1_length, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+z2 <- rtdirichlet(n = z2_length, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+z3 <- rtdirichlet(n = z3_length, eta = c(5, 2, 1), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+z4 <- rtdirichlet(n = z4_length, eta = c(3, 5, 4), a = c(0, 0, 0), b = c(0.5, 0.5, 0.5))
+side_lengths <- rbind(z1, z2, z3, z4)
 
 # Generate angle proportions for a dataset of 3-gons
 z1_length <- 10
 z2_length <- 5
 z3_length <- 2
-z1 <- rtdirichlet(n = 10, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
-z2 <- rtdirichlet(n = 5, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
-z3 <- rtdirichlet(n = 2, eta = c(1, 2, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
-angles <- rbind(z1, z2, z3)
-z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length))
+z4_length <- 29
+z1 <- rtdirichlet(n = z1_length, eta = c(1, 1, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+z2 <- rtdirichlet(n = z2_length, eta = c(2, 1, 2), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+z3 <- rtdirichlet(n = z3_length, eta = c(5, 2, 1), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+z4 <- rtdirichlet(n = z4_length, eta = c(3, 5, 4), a = c(0, 0, 0), b = c(0.3, 0.3, 0.3))
+angles <- rbind(z1, z2, z3, z4)
+
+# Generate ground truth
+z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length), rep(4, z4_length))
 ```
 
 Step 2: Test BACON clustering algorithm.
@@ -245,12 +260,12 @@ source("bacon.R")
 ```{r}
 res <- bacon(side_lengths, 
              angles, 
-             K = 3, 
+             K = 4, 
              weight = 1,
              estimate.s = TRUE, 
              estimate.r = TRUE,
-             iter = 5000, 
-             burn = 2500)
+             iter = 10000, 
+             burn = 5000)
 res$cluster
 res$s_map
 res$r_map
