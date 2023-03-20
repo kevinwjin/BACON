@@ -17,7 +17,7 @@ head(L)
 head(A)
 
 ## Run the model (Default iterations = 2000; burn in = 1000)
-res <- bacon(L, A, K = 3, iter = 10000, burn = 2000) # ARI = 0.536 ~ 0.731
+res <- bacon(L, A, K = 3, iter = 10000, burn = 5000) # ARI = 0.536 ~ 0.731
 res <- bacon(L2, A2, K = 3) # ARI = 1
 
 ## BACON produces the following output variables:
@@ -78,15 +78,16 @@ mclust::adjustedRandIndex(res$cluster, phenotype)
 setwd("~/Documents/Repositories/BACON/code/clustering")
 source("bacon.R")
 
-## Load simulated shape data (100 20-gons with 4 clusters)
+## Load simulated shape data (100 20-gons with 10 clusters)
 setwd("~/Documents/Repositories/BACON/data/simulated/Data")
 load("decagons.Rdata")
 head(side_lengths)
 head(angles)
 
 ## Run the model
-res <- bacon(side_lengths[, 1:20], angles[, 1:20], K = 10,
-             iter = 50000, burn = 2000)
+res <- bacon(side_lengths[, 1:20], angles[, 1:20], K = 10, weight = 0, 
+             estimate.s = TRUE, estimate.r = TRUE,
+             iter = 10000, burn = 5000)
 
 ## Check convergence
 plot(rowSums(res$s_store == 0), type = "l", 
