@@ -47,7 +47,7 @@ x <- 50
 z <- 5
 n <- 10
 k <- 5
-jitter_factor <- 0.01
+jitter_factor <- 0.02
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
 ```
 
@@ -102,8 +102,8 @@ res <- bacon(side_lengths,
              angles, 
              K = z,
              weight = 0,
-             estimate.s = TRUE, 
-             estimate.r = TRUE,
+             estimate.s = FALSE, 
+             estimate.r = FALSE,
              iter = 10000, 
              burn = 5000)
 res$cluster
@@ -117,6 +117,35 @@ plot(rowSums(res$s_store == 0), type = "l",
 ## Check clustering accuracy
 ground_truth <- rep(1:z, each = n)
 mclust::adjustedRandIndex(res$cluster, ground_truth)
+```
+
+Test the effect of side length weight on model performance.
+```{r echo = FALSE}
+weight_performance <- as.data.frame(matrix(nrow = 10, ncol = 2, byrow = TRUE))
+colnames(weight_performance) <- c("weight", "ari")
+ground_truth <- rep(1:z, each = n)
+  
+row <- 1
+for (w in seq(from = 0, to = 1, by = 0.1)) {
+  res <- bacon(side_lengths, 
+               angles, 
+               K = z,
+               weight = w,
+               estimate.s = FALSE, 
+               estimate.r = FALSE,
+               iter = 10000, 
+               burn = 5000)
+  weight_performance[row, "weight"] <- w
+  weight_performance[row, "ari"] <- mclust::adjustedRandIndex(res$cluster, 
+                                                         ground_truth)
+  row <- row + 1
+}
+
+plot(weight_performance,
+     xlab = "Side Length Weight", 
+     ylab = "ARI",
+     main = "BACON Performance based on Side Length Weight (50 5-gons)",
+     type = "b")
 ```
 
 Step 6: Reconstruct all closed unit polygonal chains for each shape from the 
@@ -168,7 +197,7 @@ z4 <- rtdirichlet(n = z4_length, eta = c(3, 5, 4), a = c(0, 0, 0), b = c(0.3, 0.
 angles <- rbind(z1, z2, z3, z4)
 
 # Generate ground truth
-z <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length), rep(4, z4_length))
+ground_truth <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length), rep(4, z4_length))
 ```
 
 Step 2: Test BACON clustering algorithm.
@@ -183,8 +212,8 @@ res <- bacon(side_lengths,
              angles, 
              K = 4, 
              weight = 1,
-             estimate.s = TRUE, 
-             estimate.r = TRUE,
+             estimate.s = FALSE, 
+             estimate.r = FALSE,
              iter = 10000, 
              burn = 5000)
 res$cluster
@@ -196,7 +225,7 @@ plot(rowSums(res$s_store == 0), type = "l",
      ylab = "Number of samples with starting point as 0", xlab = "Iteration")
 
 ## Check clustering accuracy
-mclust::adjustedRandIndex(res$cluster, z)
+mclust::adjustedRandIndex(res$cluster, ground_truth)
 ```
 
 Step 3: Reconstruct all closed unit polygonal chains for each shape from the 
