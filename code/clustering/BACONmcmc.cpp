@@ -12,7 +12,7 @@ static arma::uvec which(IntegerVector x, int c);
 static arma::uvec organize_label(IntegerVector x);
 
 // [[Rcpp::export]]
-Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estimate_s, bool estimate_r, int iter, int burn) {
+Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight_A, double weight_L, bool estimate_s, bool estimate_r, int iter, int burn) {
   // Read data information
   int m = L.n_rows;
   int n = L.n_cols;
@@ -138,17 +138,17 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
         // Prior
         loglklh(k) = pi(k);
 
-        // Data likelihood of A2
-        loglklh(k) = loglklh(k) + lgamma(sum(Theta(k, _)));
+        // Data likelihood of A2 (add weight_A >= 0)
+        loglklh(k) = loglklh(k) + weight_A*(lgamma(sum(Theta(k, _))));
         for (i = 0; i < n; i++) {
-          loglklh(k) = loglklh(k) - lgamma(Theta(k, i)) + (Theta(k, i) - 1)*log(A2(j, i));
+          loglklh(k) = loglklh(k) - weight_A*(lgamma(Theta(k, i)) + (Theta(k, i) - 1)*log(A2(j, i)));
         }
 
         if (double_dirichlet){
-          // Data likelihood of L2 (add weight >= 0)
-          loglklh(k) = loglklh(k) + weight*(lgamma(sum(Lambda(k, _))));
+          // Data likelihood of L2 (add weight_L >= 0)
+          loglklh(k) = loglklh(k) + weight_L*(lgamma(sum(Lambda(k, _))));
           for (i = 0; i < n; i++) {
-            loglklh(k) = loglklh(k) - weight*(lgamma(Lambda(k, i)) + (Lambda(k, i) - 1)*log(L2(j, i)));
+            loglklh(k) = loglklh(k) - weight_L*(lgamma(Lambda(k, i)) + (Lambda(k, i) - 1)*log(L2(j, i)));
           }
           
         }
@@ -228,14 +228,14 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
             
             // Data likelihood of A2
             for (ii = 0; ii< n; ii++) {
-              loglklh(i, g) = loglklh(i, g) + (Theta(z(j), ii) - 1)*log(A2_new(ii));
+              loglklh(i, g) = loglklh(i, g) + weight_A*((Theta(z(j), ii) - 1)*log(A2_new(ii)));
             }
             
             
             if (double_dirichlet){
               // Data likelihood of L2
               for (ii = 0; ii< n; ii++) {
-                loglklh(i, g) = loglklh(i, g) + weight*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
+                loglklh(i, g) = loglklh(i, g) + weight_L*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
               }
             }
           }
@@ -306,13 +306,13 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
           
           // Data likelihood of A2
           for (ii = 0; ii < n; ii++) {
-            loglklh(i) = loglklh(i) + (Theta(z(j), ii) - 1)*log(A2_new(ii));
+            loglklh(i) = loglklh(i) + weight_A*((Theta(z(j), ii) - 1)*log(A2_new(ii)));
           }
           
           if (double_dirichlet){
             // Data likelihood of L2
             for (ii = 0; ii < n; ii++) {
-              loglklh(i) = loglklh(i) + weight*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
+              loglklh(i) = loglklh(i) + weight_L*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
             }
           }
         }
@@ -376,13 +376,13 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
           
           // Data likelihood of A2
           for (ii = 0; ii < n; ii++) {
-            loglklh(g) = loglklh(g) + (Theta(z(j), ii) - 1)*log(A2_new(ii));
+            loglklh(g) = loglklh(g) + weight_A*((Theta(z(j), ii) - 1)*log(A2_new(ii)));
           }
           
           if (double_dirichlet){
             // Data likelihood of L2
             for (ii = 0; ii < n; ii++) {
-              loglklh(g) = loglklh(g) + weight*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
+              loglklh(g) = loglklh(g) + weight_L*((Lambda(z(j), ii) - 1)*log(L2_new(ii)));
             }
           }
         }
@@ -432,12 +432,12 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
           // Data (Length) likelihood ratio
           for (j = 0; j < m; j++){
             if (z(j) == k){
-              hastings = hastings + weight*(lgamma(sum(Lambda_new(k, _))));
-              hastings = hastings - weight*(lgamma(sum(Lambda(k, _))));
+              hastings = hastings + weight_L*(lgamma(sum(Lambda_new(k, _))));
+              hastings = hastings - weight_L*(lgamma(sum(Lambda(k, _))));
               
               for (ii = 0; ii < n; ii++) {
-                hastings = hastings + weight*(- lgamma(Lambda_new(k, ii)) + (Lambda_new(k, ii) - 1)*log(L2(j, ii)));
-                hastings = hastings - weight*(- lgamma(Lambda(k, ii)) + (Lambda(k, ii) - 1)*log(L2(j, ii)));
+                hastings = hastings + weight_L*(- lgamma(Lambda_new(k, ii)) + (Lambda_new(k, ii) - 1)*log(L2(j, ii)));
+                hastings = hastings - weight_L*(- lgamma(Lambda(k, ii)) + (Lambda(k, ii) - 1)*log(L2(j, ii)));
               }
             }
           }
@@ -477,12 +477,12 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight, bool estima
         // Data (Angle) likelihood ratio
         for (j = 0; j < m; j++){
           if (z(j) == k){
-            hastings = hastings + lgamma(sum(Theta_new(k, _)));
-            hastings = hastings - lgamma(sum(Theta(k, _)));
+            hastings = hastings + weight_A*(lgamma(sum(Theta_new(k, _))));
+            hastings = hastings - weight_A*(lgamma(sum(Theta(k, _))));
             
             for (ii = 0; ii < n; ii++) {
-              hastings = hastings + (- lgamma(Theta_new(k, ii)) + (Theta_new(k, ii) - 1)*log(A2(j, ii)));
-              hastings = hastings - (- lgamma(Theta(k, ii)) + (Theta(k, ii) - 1)*log(A2(j, ii)));
+              hastings = hastings + weight_A*(- lgamma(Theta_new(k, ii)) + (Theta_new(k, ii) - 1)*log(A2(j, ii)));
+              hastings = hastings - weight_A*(- lgamma(Theta(k, ii)) + (Theta(k, ii) - 1)*log(A2(j, ii)));
             }
           }
         }
