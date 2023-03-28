@@ -46,14 +46,14 @@ Step 2: Simulate 5 clusters of a total of 50 20-gons, each cluster having
 x <- 200
 z <- 10
 n <- 20
-k <- 5
+k <- 3
 jitter_factor <- 0.02
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
 ```
 
 
 Step 3: For a sanity check, plot each shape to visualize it.
-```{r, echo=FALSE, eval = FALSE}
+```{r echo=FALSE, eval = FALSE}
 for (i in seq_along(dataset)) {
   for (shape in dataset[[i]]) {
     plot(shape, type = "l")
@@ -144,7 +144,7 @@ for (w in seq(from = 0, to = 1, by = 0.1)) {
 plot(weight_performance,
      xlab = "Side Length Weight", 
      ylab = "ARI",
-     main = "BACON Performance based on Side Length Weight (200 5-gons)",
+     main = "BACON Performance based on Side Length Weight (200 3-gons)",
      type = "b")
 ```
 
