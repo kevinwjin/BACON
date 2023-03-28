@@ -12,7 +12,7 @@ static arma::uvec which(IntegerVector x, int c);
 static arma::uvec organize_label(IntegerVector x);
 
 // [[Rcpp::export]]
-Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight_A, double weight_L, bool estimate_s, bool estimate_r, int iter, int burn) {
+Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight_L, double weight_A, bool estimate_s, bool estimate_r, int iter, int burn) {
   // Read data information
   int m = L.n_rows;
   int n = L.n_cols;

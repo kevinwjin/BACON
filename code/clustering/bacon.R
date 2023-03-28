@@ -77,18 +77,26 @@ get.ppm <- function(z_store, burn, iter, K) {
 ## 1) L: length proportions
 ## 2) A: angle proportions
 ## 3) K: number of clusters, a priori
-## 4) weight_A: weight of side length proportions, default is 1
-## 5) weight_L: weight of angle proportions, default is 1
+## 4) weight_L: weight of angle proportions, default is 1
+## 5) weight_A: weight of side length proportions, default is 1
 ## 6) estimate.s: logical, TRUE (default) or FALSE (s = 0)
 ## 7) estimate.r: logical, TRUE (default) or FALSE (r = 0)
 ## 8) iter: Number of MCMC iterations, 2000 by default
 ## 9) burn: Number of burn-in iterations, 1000 by default (iter/2)
 ################################################################################
 
-bacon <- function(L, A, K, weight_A = 1, weight_L = 1, estimate.s = TRUE, estimate.r = TRUE, iter = 2000, burn = 1000) {
+bacon <- function(L, A, K, weight_L = 1, weight_A = 1, estimate.s = TRUE, estimate.r = TRUE, iter = 2000, burn = 1000) {
   ## Run model
   start_time = proc.time()
-  res = BACONmcmc(L, A, K, weight_A, weight_L, estimate_s=estimate.s, estimate_r=estimate.r, iter, burn)
+  res = BACONmcmc(L = L, 
+                  A = A, 
+                  K = K, 
+                  weight_L = weight_L, 
+                  weight_A = weight_L, 
+                  estimate_s=estimate.s, 
+                  estimate_r=estimate.r, 
+                  iter = iter, 
+                  burn = burn)
   end_time = proc.time()
   run_time = as.numeric((end_time - start_time)[1:3], "secs")
   print(paste0(paste0(c("user", "system", "elapsed"), " time is "), round(run_time, digits = 3), "s"))
