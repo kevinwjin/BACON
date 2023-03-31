@@ -39,8 +39,8 @@ simulate_shapes <- function(x, z, n, k, jitter_factor) {
 }
 ```
 
-Step 2: Simulate 5 clusters of a total of 50 20-gons, each cluster having 
-10 k-gons each with 0.01 jitter (amount of jitter is modifiable).
+Step 2: Simulate 5 clusters of a total of 200 3-gons, each cluster having 
+10 k-gons each with 0.02 jitter (amount of jitter is modifiable).
 
 ```{r}
 x <- 200
@@ -86,12 +86,13 @@ for (i in seq_along(dataset)) {
 }
 
 # Clean up variables
-rm(i, j, shape)
+rm(i, j)
 ```
 
 Step 5: Test BACON clustering algorithm.
 
 ```{r}
+# Source the MCMC algorithm
 setwd("~/Documents/Repositories/BACON/code/clustering/")
 source("bacon.R")
 ```
@@ -101,9 +102,10 @@ source("bacon.R")
 res <- bacon(side_lengths, 
              angles, 
              K = z,
-             weight = 0,
-             estimate.s = FALSE, 
-             estimate.r = FALSE,
+             weight_L = 0,
+             weight_A = 1,
+             estimate.s = TRUE, 
+             estimate.r = TRUE,
              iter = 10000, 
              burn = 5000)
 res$cluster
@@ -130,7 +132,8 @@ for (w in seq(from = 0, to = 1, by = 0.1)) {
   res <- bacon(side_lengths, 
                angles, 
                K = z,
-               weight = w,
+               weight_L = w,
+               weight_A = 1,
                estimate.s = FALSE, 
                estimate.r = FALSE,
                iter = 10000, 
@@ -146,6 +149,45 @@ plot(weight_performance,
      ylab = "ARI",
      main = "BACON Performance based on Side Length Weight (200 3-gons)",
      type = "b")
+```
+
+Test the effects of both angle weight and side length weight on model
+performance.
+```{r echo = FALSE}
+weight_performance <- as.data.frame(matrix(nrow = 20, ncol = 20, byrow = TRUE))
+colnames(weight_performance) <- seq(from = 0, to = 2, by = 0.1)
+rownames(weight_performance) <- seq(from = 0, to = 2, by = 0.1)
+ground_truth <- rep(1:z, each = n)
+  
+a <- 0 # Weight on angle proportion parameter
+l <- 0 # Weight on length proportion parameter
+row <- 1 # Row counter
+
+for (i in seq(from = 0, to = 2, by = 0.1)) {
+  res <- bacon(side_lengths, 
+               angles, 
+               K = z,
+               weight_L = w,
+               weight_A = a,
+               estimate.s = FALSE, 
+               estimate.r = FALSE,
+               iter = 10000, 
+               burn = 5000)
+  weight_performance[row, "weight"] <- i
+  weight_performance[row, "ari"] <- mclust::adjustedRandIndex(res$cluster, 
+                                                         ground_truth)
+  a <- a + 0.1
+  l <- l + 0.1
+  row <- row + 1
+}
+
+heatmap(weight_performance, 
+        Rowv = NA, 
+        Colv = NA,
+        xlab = "Angle Weight", 
+        ylab = "Side Length Weight",
+        main = "BACON Performance based on Side Length Weight (200 3-gons)",
+        scale = "column")
 ```
 
 Step 6: Reconstruct all closed unit polygonal chains for each shape from the 
