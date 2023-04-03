@@ -172,8 +172,8 @@ for (l in seq(from = 0, to = 2, by = 0.1)) {
                  weight_A = a,
                  estimate.s = FALSE, 
                  estimate.r = FALSE,
-                 iter = 10000, 
-                 burn = 5000)
+                 iter = 100, 
+                 burn = 50)
     weight_performance[row, col] <- mclust::adjustedRandIndex(res$cluster, ground_truth)
     col <- col + 1
   }
