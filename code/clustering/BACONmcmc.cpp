@@ -141,14 +141,14 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight_L, double we
         // Data likelihood of A2 (add weight_A >= 0)
         loglklh(k) = loglklh(k) + weight_A*(lgamma(sum(Theta(k, _))));
         for (i = 0; i < n; i++) {
-          loglklh(k) = loglklh(k) - weight_A*(lgamma(Theta(k, i)) + (Theta(k, i) - 1)*log(A2(j, i)));
+          loglklh(k) = loglklh(k) - weight_A*lgamma(Theta(k, i)) + weight_A*(Theta(k, i) - 1)*log(A2(j, i));
         }
 
         if (double_dirichlet){
           // Data likelihood of L2 (add weight_L >= 0)
           loglklh(k) = loglklh(k) + weight_L*(lgamma(sum(Lambda(k, _))));
           for (i = 0; i < n; i++) {
-            loglklh(k) = loglklh(k) - weight_L*(lgamma(Lambda(k, i)) + (Lambda(k, i) - 1)*log(L2(j, i)));
+            loglklh(k) = loglklh(k) - weight_L*lgamma(Lambda(k, i)) + weight_L*(Lambda(k, i) - 1)*log(L2(j, i));
           }
           
         }
