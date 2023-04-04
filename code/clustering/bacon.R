@@ -99,7 +99,7 @@ bacon <- function(L, A, K, weight_L = 1, weight_A = 1, estimate.s = TRUE, estima
                   burn = burn)
   end_time = proc.time()
   run_time = as.numeric((end_time - start_time)[1:3], "secs")
-  print(paste0(paste0(c("user", "system", "elapsed"), " time is "), round(run_time, digits = 3), "s"))
+  cat("\nRuntime:\n", paste0(paste0(c("User", "System", "Elapsed"), " time: "), round(run_time, digits = 3), "s"))
   
   ## Label switching of z, pi, Lambda, and Theta by Theta
   tt <- switch_label(res$z_store,  res$pi_store, res$Lambda_store, res$Theta_store, K)

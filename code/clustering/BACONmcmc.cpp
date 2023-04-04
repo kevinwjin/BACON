@@ -597,7 +597,7 @@ Rcpp::List BACONmcmc(arma::mat L, arma::mat A, int K, double weight_L, double we
     
     // Monitor the process
     if((t*100/(iter-1)) == num) {
-      Rcout<<num<< "% has been done\n";
+      Rcout<<num<< "% complete...\t";
       num = num + 10;
     }
 
