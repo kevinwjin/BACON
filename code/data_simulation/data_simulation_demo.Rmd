@@ -38,17 +38,17 @@ simulate_shapes <- function(x, z, n, k, jitter_factor) {
 }
 ```
 
-Step 2: Simulate 5 clusters of a total of 200 3-gons, each cluster having 
-10 k-gons each with 0.02 jitter (amount of jitter is modifiable).
+Step 2: Simulate 10 clusters of a total of 200 3-gons, each cluster having 
+10 3-gons each with 0.02 jitter (amount of jitter is modifiable).
 ```{r}
 x <- 200
 z <- 10
 n <- 20
 k <- 3
 jitter_factor <- 0.02
+
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
 ```
-
 
 Step 3: For a sanity check, plot each shape to visualize it.
 ```{r echo=FALSE, eval = FALSE}
@@ -151,40 +151,42 @@ plot(weight_performance,
 Test the effects of both angle weight and side length weight on model
 performance.
 ```{r echo = FALSE}
-# x-axis holds the side length weights
-# y-axis holds the angle weights
-weight_performance <- as.data.frame(matrix(nrow = 21, ncol = 21, byrow = TRUE))
-colnames(weight_performance) <- seq(from = 0, to = 2, by = 0.1)
-rownames(weight_performance) <- seq(from = 0, to = 2, by = 0.1)
 ground_truth <- rep(1:z, each = n)
+n_replicates <- 10
+weight_performances <- vector("list", n_replicates)
 
-row <- 1
-col <- 1
-for (l in seq(from = 0, to = 2, by = 0.1)) {
-  for (a in seq(from = 0, to = 2, by = 0.1)) {
-    res <- bacon(side_lengths, 
-                 angles, 
-                 K = z,
-                 weight_L = l,
-                 weight_A = a,
-                 estimate.s = FALSE, 
-                 estimate.r = FALSE,
-                 iter = 10000, 
-                 burn = 5000)
-    weight_performance[row, col] <- mclust::adjustedRandIndex(res$cluster, ground_truth)
-    col <- col + 1
-  }
-  row <- row + 1
+# Run every simulation setting 5-10 times and take the mean ARI
+for(i in 1:length(weight_performances)) {
+  # Create matrix to store ARI results
+  weight_performance <- matrix(nrow = 5, ncol = 5, byrow = TRUE)
+  colnames(weight_performance) <- seq(from = 0, to = 2, by = 0.5)
+  rownames(weight_performance) <- seq(from = 0, to = 2, by = 0.5)
+  # Run BACON across weights [0, 2] and calculate ARI
+  row <- 1
   col <- 1
+  for (l in seq(from = 0, to = 2, by = 0.5)) {
+    for (a in seq(from = 0, to = 2, by = 0.5)) {
+      res <- bacon(side_lengths, 
+                   angles, 
+                   K = z,
+                   weight_L = l,
+                   weight_A = a,
+                   estimate.s = FALSE, 
+                   estimate.r = FALSE,
+                   iter = 5000, 
+                   burn = 2500)
+      weight_performance[row, col] <- mclust::adjustedRandIndex(res$cluster, ground_truth)
+      col <- col + 1
+    }
+    row <- row + 1
+    col <- 1
+  }
+  # Store matrix in master list
+  weight_performances[[i]] <- weight_performance
 }
 
-heatmap(as.matrix(weight_performance[nrow(weight_performance):1, ]),
-        margins = c(3.5, 3.5),
-        scale = "column",
-        Rowv = NA, 
-        Colv = NA,
-        xlab = "Angle Weight", 
-        ylab = "Side Length Weight")
+# Take the element-wise mean of all weight performances
+weight_performance <- Reduce("+", weight_performances) / length(weight_performances)
 
 require(pheatmap)
 require(grid)
@@ -193,7 +195,7 @@ pheatmap(mat = weight_performance,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
          display_numbers = TRUE,
-         main = "BACON Performance (n = 200; k = 3; z = 10)",
+         main = "Mean BACON performance over 10 replicates (n = 200; k = 3; z = 10)",
          xlab = "Angle Weight", 
          ylab = "Side Length Weight",
          scale = "none")
