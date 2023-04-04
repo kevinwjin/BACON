@@ -17,7 +17,6 @@ source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
 ```
 
 Step 1: Define a function to generate shapes.
-
 ```{r}
 # x: Total number of shapes in the dataset
 # z: Number of clusters in the shape dataset
@@ -41,7 +40,6 @@ simulate_shapes <- function(x, z, n, k, jitter_factor) {
 
 Step 2: Simulate 5 clusters of a total of 200 3-gons, each cluster having 
 10 k-gons each with 0.02 jitter (amount of jitter is modifiable).
-
 ```{r}
 x <- 200
 z <- 10
@@ -89,8 +87,7 @@ for (i in seq_along(dataset)) {
 rm(i, j)
 ```
 
-Step 5: Test BACON clustering algorithm.
-
+Step 5: Test the BACON clustering algorithm.
 ```{r}
 # Source the MCMC algorithm
 setwd("~/Documents/Repositories/BACON/code/clustering/")
@@ -172,8 +169,8 @@ for (l in seq(from = 0, to = 2, by = 0.1)) {
                  weight_A = a,
                  estimate.s = FALSE, 
                  estimate.r = FALSE,
-                 iter = 100, 
-                 burn = 50)
+                 iter = 10000, 
+                 burn = 5000)
     weight_performance[row, col] <- mclust::adjustedRandIndex(res$cluster, ground_truth)
     col <- col + 1
   }
@@ -211,7 +208,6 @@ side length and angle proportions.
 **WARNING: Computationally intensive!**
 Number of possible shapes calculated increases exponentially with the number
 of vertices per shape and the number of shapes in the dataset.
-
 ```{r}
 for (row in 1:nrow(angles)) {
   v <- reconstruct(angles[row, ], side_lengths[row, ])
