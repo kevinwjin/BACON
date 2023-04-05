@@ -15,12 +15,24 @@ Step 0: Load essential functions for simulating shape data.
 source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
 ```
 
-Step 1: Generate a dataset containing 10 clusters of a total of 200 3-gons, 
-each cluster having 10 3-gons, each with 0.02 jitter.
+Step 1: Generate a dataset containing 10 clusters of a total of 1000 3-gons, 
+each cluster having 100 3-gons, each with 0.02 jitter.
+
+Dataset structure:
+> 1. Cluster 1
+> + Shape 1
+> + Shape 2
+> ...
+> + Shape 100
+> 2. Cluster 2
+> ...
+> 3. Cluster 10
+> ...
+
 ```{r}
-x <- 200
+x <- 1000
 z <- 10
-n <- 20
+n <- 100
 k <- 5
 jitter_factor <- 0.02
 
@@ -38,15 +50,6 @@ for (i in seq_along(dataset)) {
 
 Step 3: Extract side length and angle proportions as the data to be clustered. 
 Creates nested lists for angle proportions and side length proportions.
-List structure:
-1. Cluster 1
-+ Shape 1
-+ Shape 2
-...
-+ Shape 100
-2. Cluster 2
-...
-3. Cluster 10
 ```{r}
 angles <- matrix(nrow = x, ncol = k, byrow = TRUE)
 side_lengths <- matrix(nrow = x, ncol = k, byrow = TRUE)
@@ -80,11 +83,11 @@ res <- bacon(side_lengths,
              weight_A = 1,
              estimate.s = TRUE, 
              estimate.r = TRUE,
-             iter = 1000, 
-             burn = 500)
-res$cluster
-res$s_map
-res$r_map
+             iter = 5000, 
+             burn = 2500)
+res$cluster # BACON-estimated cluster memberships
+res$s_map # BACON-estimated shift parameters for shape registration
+res$r_map # BACON-estimated reverse parameters for shape registration
 
 ## Check convergence
 plot(rowSums(res$s_store == 0), type = "l", 

@@ -101,7 +101,11 @@ generate <- function(k = 3, min = 0, max = 1) {
 #'
 #' @description Generates a dataset of x closed polygonal chains (k-gons), with 
 #' z evenly spaced clusters, n k-gons per cluster, and a modifiable amount of
-#' jitter.
+#' jitter. This creates a list of sublists where each sublist is
+#' a cluster and each element within each sublist is the a (k + 1) x n matrix 
+#' containing the Cartesian coordinates of a shape. Each row will have some 
+#' jitter  (the degree, or factor, of jitter can be specified) applied to it to 
+#' distinguish the individual shapes within a cluster.
 #'
 #' @param x Number of shapes total in the dataset.
 #' @param z Number of clusters in the dataset.
