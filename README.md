@@ -17,7 +17,7 @@ devtools:install_github("kevinwjin/BACON")
 
 ## Usage
 ### Simulate shape data
-To simulate shape data for clustering, begin by adding the correct functions to
+To simulate shape data for clustering, begin by adding the relevant functions to
 your R environment. The following file contains all functions necessary for shape 
 data simulation:
 
@@ -25,9 +25,9 @@ data simulation:
 source("~/BACON/code/data_simulation/functions.R")
 ```
 
-Next, generate some simulated shape data. We will use the `generate()` function,
-which simulates the Cartesian coordinates of the vertices of a shape.
-As an example, we will simulate 1000 20-gons belonging to 10 evenly-spaced 
+Next, generate some simulated shape data. Our data simulation code generates 
+the Cartesian coordinates of the vertices of a shape. As an example, 
+we will simulate 1000 20-gons belonging to 10 evenly-spaced 
 clusters. Each cluster will have 100 20-gons within it:
 
 ```R
@@ -39,7 +39,7 @@ dataset <- simulate_shapes(x = 1000, # 1000 shapes total
 ```
 
 As a sanity check, you may visualize the simulated shapes by plotting the 
-coordinates of each shape:
+coordinates of each shape in the dataset:
 
 ```R
 for (i in seq_along(dataset)) {
@@ -50,12 +50,12 @@ for (i in seq_along(dataset)) {
 ```
 
 We cannot cluster the raw coordinate data, as it is sensitive to geometric
-transformations; therefore, we must convert the 
-raw coordinate data to compositional data by extracting the intrinsic
+transformations; therefore, we must convert the raw coordinate data to 
+normalized compositional data by extracting the intrinsic
 transformation-invariant shape features (interior 
 angles and side lengths, both normalized to 1) that our model will be able to 
 cluster. To do this, call `get_interior_angles()` and `get_side_lengths()`, and
-store the resultant interior angle and side length datasets into new matrices:
+store the resultant interior angle and side length proportions into new matrices:
 
 ```R
 angles <- matrix(nrow = x, ncol = k, byrow = TRUE)
@@ -74,7 +74,7 @@ for (i in seq_along(dataset)) {
 rm(i, j)
 ```
 
-Finally, we finish the simulated data by generating the ground truth 
+Finally, we finish the simulated dataset by generating the ground truth 
 containing the cluster labels:
 
 ```R
