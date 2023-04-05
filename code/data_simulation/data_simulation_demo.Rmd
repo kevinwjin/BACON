@@ -44,7 +44,7 @@ Step 2: Simulate 10 clusters of a total of 200 3-gons, each cluster having
 x <- 200
 z <- 10
 n <- 20
-k <- 3
+k <- 5
 jitter_factor <- 0.02
 
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
@@ -99,12 +99,12 @@ source("bacon.R")
 res <- bacon(side_lengths, 
              angles, 
              K = z,
-             weight_L = 0,
+             weight_L = 1,
              weight_A = 1,
              estimate.s = TRUE, 
              estimate.r = TRUE,
-             iter = 10000, 
-             burn = 5000)
+             iter = 1000, 
+             burn = 500)
 res$cluster
 res$s_map
 res$r_map
@@ -195,7 +195,7 @@ pheatmap(mat = weight_performance,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
          display_numbers = TRUE,
-         main = "Mean BACON performance over 10 replicates (n = 200; k = 3; z = 10)",
+         main = "Mean BACON performance over 10 replicates (n = 200; k = 5; z = 10)",
          xlab = "Angle Weight", 
          ylab = "Side Length Weight",
          scale = "none")
