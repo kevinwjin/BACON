@@ -9,37 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Generate simulated data via polygonal chain simulation
-
-Load essential functions for simulating data.
+# Generate simulated shape data via simulation of polygonal chains.
+Step 0: Load essential functions for simulating shape data.
 ```{r}
 source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
 ```
 
-Step 1: Define a function to generate shapes.
-```{r}
-# x: Total number of shapes in the dataset
-# z: Number of clusters in the shape dataset
-# n: Number of shapes per cluster
-# k: Number of vertices in each shape
-# jitter_factor: Amount of jitter to apply to each shape within a cluster
-simulate_shapes <- function(x, z, n, k, jitter_factor) {
-  dataset <- list()
-  for (cluster in 1:z) {
-    shape <- generate(k = k)
-    shapes <- replicate(n, shape, simplify = FALSE)
-    for (i in seq_along(shapes)) {
-      shapes[[i]] <- 
-        jitter(shapes[[i]], factor = jitter_factor)
-    }
-    dataset[[length(dataset) + 1]] <- shapes
-  }
-  return(dataset)
-}
-```
-
-Step 2: Simulate 10 clusters of a total of 200 3-gons, each cluster having 
-10 3-gons each with 0.02 jitter (amount of jitter is modifiable).
+Step 1: Generate a dataset containing 10 clusters of a total of 200 3-gons, 
+each cluster having 10 3-gons, each with 0.02 jitter.
 ```{r}
 x <- 200
 z <- 10
@@ -50,7 +27,7 @@ jitter_factor <- 0.02
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
 ```
 
-Step 3: For a sanity check, plot each shape to visualize it.
+Step 2: For a sanity check, plot each shape to visualize it.
 ```{r echo=FALSE, eval = FALSE}
 for (i in seq_along(dataset)) {
   for (shape in dataset[[i]]) {
@@ -59,7 +36,7 @@ for (i in seq_along(dataset)) {
 }
 ```
 
-Step 4: Extract side length and angle proportions as the data to be clustered. 
+Step 3: Extract side length and angle proportions as the data to be clustered. 
 Creates nested lists for angle proportions and side length proportions.
 List structure:
 1. Cluster 1
@@ -87,7 +64,7 @@ for (i in seq_along(dataset)) {
 rm(i, j)
 ```
 
-Step 5: Test the BACON clustering algorithm.
+Step 4: Test the BACON clustering algorithm.
 ```{r}
 # Source the MCMC algorithm
 setwd("~/Documents/Repositories/BACON/code/clustering/")
@@ -118,7 +95,7 @@ ground_truth <- rep(1:z, each = n)
 mclust::adjustedRandIndex(res$cluster, ground_truth)
 ```
 
-Test the effect of side length weight on model performance.
+Step 5a: Test the effect of side length weight on model performance.
 ```{r echo = FALSE, eval = FALSE}
 weight_performance <- as.data.frame(matrix(nrow = 10, ncol = 2, byrow = TRUE))
 colnames(weight_performance) <- c("weight", "ari")
@@ -148,7 +125,7 @@ plot(weight_performance,
      type = "b")
 ```
 
-Test the effects of both angle weight and side length weight on model
+Step 5b: Test the effects of both angle weight and side length weight on model
 performance.
 ```{r echo = FALSE}
 ground_truth <- rep(1:z, each = n)
@@ -203,7 +180,6 @@ setHook("grid.newpage", NULL, "replace")
 grid.text("Angle Weight", y=-0.03, gp=gpar(fontsize = 12))
 grid.text("Side Length Weight", x=-0.03, rot=90, gp=gpar(fontsize = 12))
 ```
-
 Step 6: Reconstruct all closed unit polygonal chains for each shape from the 
 side length and angle proportions. 
 
@@ -220,14 +196,13 @@ for (row in 1:nrow(angles)) {
 
 # Generate simulated data by drawing from a truncated Dirichlet distribution.
 
-Load essential functions for simulating data.
+Step 0: Load essential functions for simulating TDD data.
 ```{r}
 source("~/Documents/Repositories/BACON/code/data_simulation/functions.R")
 ```
 
 Step 1: Simulate side length and angle proportions for 17 3-gons (Reverse
 mapping function seems to add an extra vertex? Is it because it's not closed?):
-
 ```{r}
 # Generate side length proportions for a dataset of 3-gons
 z1_length <- 10
@@ -256,7 +231,6 @@ ground_truth <- c(rep(1, z1_length), rep(2, z2_length), rep(3, z3_length), rep(4
 ```
 
 Step 2: Test BACON clustering algorithm.
-
 ```{r}
 setwd("~/Documents/Repositories/BACON/code/clustering/")
 source("bacon.R")
@@ -266,7 +240,8 @@ source("bacon.R")
 res <- bacon(side_lengths, 
              angles, 
              K = 4, 
-             weight = 1,
+             weight_L = 1,
+             weight_A = 1,
              estimate.s = FALSE, 
              estimate.r = FALSE,
              iter = 10000, 
@@ -285,7 +260,6 @@ mclust::adjustedRandIndex(res$cluster, ground_truth)
 
 Step 3: Reconstruct all closed unit polygonal chains for each shape from the 
 side length and angle proportions. 
-
 ```{r}
 for (i in 1:nrow(angles)) {
   assign(paste0("pc_", i), reconstruct(angles[i, ], side_lengths[i, ]))

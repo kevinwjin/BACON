@@ -95,6 +95,37 @@ generate <- function(k = 3, min = 0, max = 1) {
   return(chain)
 }
 
+#' Generate a dataset of closed polygonal chains
+#' 
+#' @author Kevin Jin
+#'
+#' @description Generates a dataset of x closed polygonal chains (k-gons), with 
+#' z evenly spaced clusters, n k-gons per cluster, and a modifiable amount of
+#' jitter.
+#'
+#' @param x Number of shapes total in the dataset.
+#' @param z Number of clusters in the dataset.
+#' @param n Number of shapes in each evenly-spaced cluster.
+#' @param k Number of vertices in each shape.
+#' @param jitter_factor Amount of jitter to apply to each shape within a cluster.
+#'
+#' @return A list of sublists (matrices) containing the dataset. Each main list 
+#' represents a cluster, and each sublist (matrix) represents a shape within 
+#' that cluster.
+simulate_shapes <- function(x, z, n, k, jitter_factor) {
+  dataset <- list()
+  for (cluster in 1:z) {
+    shape <- generate(k = k)
+    shapes <- replicate(n, shape, simplify = FALSE)
+    for (i in seq_along(shapes)) {
+      shapes[[i]] <- 
+        jitter(shapes[[i]], factor = jitter_factor)
+    }
+    dataset[[length(dataset) + 1]] <- shapes
+  }
+  return(dataset)
+}
+
 #' Check whether a polygonal chain is closed
 #' 
 #' @author Kevin Jin
