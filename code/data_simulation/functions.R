@@ -388,42 +388,42 @@ compositional <- function(data, sum) {
 #' interior angles and relative side lengths, reconstruct all possible 
 #' unit polygonal chains and return the closed ones.
 #'
-#' @param a A numeric vector of length n containing interior angles.
-#' @param l A numeric vector of length n containing relative side lengths.
+#' @param angles A numeric vector of length n containing interior angle proportions.
+#' @param side_lengths A numeric vector of length n containing side length proportions.
 #'
 #' @return A list or (k + 1) x 2 matrix containing the x-y coordinates of the 
 #' vertices of the unit polygonal chain.
-reconstruct <- function(a, l) {
+reconstruct <- function(angles, side_lengths) {
   # Get number of vertices
-  n <- length(a)
+  n <- length(angles)
   
   # Convert compositional angle proportions back to radians
-  a <- a * (n - 2) * pi
+  angles <- angles * (n - 2) * pi
   
   # If the shape is a triangle, then ignore the provided side length
   # proportions and manually recalculate using the law of sines
   if (n == 3) {
-    l <- sin(a) / sum(sin(a))
-    l <- c(l[3], l[-3]) # Change ordering to be correct
+    side_lengths <- sin(angles) / sum(sin(angles))
+    side_lengths <- c(side_lengths[3], side_lengths[-3]) # Change ordering to be correct
   }
   
   pc0 <- expand.grid(replicate(n - 1, 0:1, simplify = FALSE))
   pc <- vector(mode = "list", length = 2^(n - 1))
   for (i in 1:(2 ^ (n - 1))) {
     V <- matrix(0, 2, n + 1)
-    V[1, 2] <- l[1]
+    V[1, 2] <- side_lengths[1]
     theta <- rep(0, n + 1)
     for (j in 1:(n - 1)) {
       index <- j + 1
       if (pc0[i, j] == 1) {
-        theta[index] <- theta[index - 1] + (pi - a[index])
-        V[, index + 1] <- c(l[index] * cos(theta[index]), 
-                            l[index] * sin(theta[index])) + V[, index]
+        theta[index] <- theta[index - 1] + (pi - angles[index])
+        V[, index + 1] <- c(side_lengths[index] * cos(theta[index]), 
+                            side_lengths[index] * sin(theta[index])) + V[, index]
       }
       if (pc0[i, j] == 0) {
-        theta[index] <- theta[index - 1] - (pi - a[index])
-        V[, index + 1] <- c(l[index] * cos(theta[index]), 
-                            l[index] * sin(theta[index])) + V[, index]
+        theta[index] <- theta[index - 1] - (pi - angles[index])
+        V[, index + 1] <- c(side_lengths[index] * cos(theta[index]), 
+                            side_lengths[index] * sin(theta[index])) + V[, index]
       }
     }
     pc[[i]] <- V
