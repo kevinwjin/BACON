@@ -30,10 +30,10 @@ Dataset structure:
 > ...
 
 ```{r}
-x <- 1000
+x <- 2000
 z <- 10
-n <- 100
-k <- 5
+n <- 200
+k <- 20
 jitter_factor <- 0.02
 
 dataset <- simulate_shapes(x, z, n, k, jitter_factor)
@@ -83,8 +83,8 @@ res <- bacon(side_lengths,
              weight_A = 1,
              estimate.s = TRUE, 
              estimate.r = TRUE,
-             iter = 5000, 
-             burn = 2500)
+             iter = 10000, 
+             burn = 5000)
 res$cluster # BACON-estimated cluster memberships
 res$s_map # BACON-estimated shift parameters for shape registration
 res$r_map # BACON-estimated reverse parameters for shape registration
