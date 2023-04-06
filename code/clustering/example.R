@@ -11,7 +11,7 @@ setwd("~/Documents/Repositories/BACON/code/clustering")
 source("bacon.R")
 
 ## Load demo data (100 triangles with 3 clusters)
-setwd("~/Documents/Repositories/BACON/data")
+setwd("~/Documents/Repositories/BACON/data/simulated/Data")
 load("demo.RData")
 head(L)
 head(A)
@@ -54,17 +54,12 @@ head(angles)
 res <- bacon(side_lengths[, 1:50], 
              angles[, 1:50], 
              K = 4,
+             weight_L = 1,
+             weight_A = 1,
+             estimate.s = TRUE,
+             estimate.r = TRUE,
              iter = 10000, 
-             burn = 5000) # ARI: 0.027; User time: 95 minutes
-
-res <- bacon(side_lengths[, 1:50], 
-             angles[, 1:50], 
-             K = 2, 
-             weight = 0, 
-             estimate.s = FALSE, 
-             estimate.r = FALSE,
-             iter = 10000, 
-             burn = 5000)
+             burn = 5000) 
 
 ## Check convergence
 plot(rowSums(res$s_store == 0), type = "l", 
@@ -73,7 +68,10 @@ plot(rowSums(res$s_store == 0), type = "l",
 ## Check clustering accuracy
 mclust::adjustedRandIndex(res$cluster, phenotype)
 
-#### Run BACON on simulated 20-gon data. ####
+# ARI: 0.027; User runtime: 95 minutes
+# ARI: 0.022 at 10000/5000 iter; Elapsed runtime: 104 minutes
+
+#### Run BACON on simulated 20-gon ("decagons") data. ####
 ## Load required packages
 setwd("~/Documents/Repositories/BACON/code/clustering")
 source("bacon.R")
@@ -85,9 +83,15 @@ head(side_lengths)
 head(angles)
 
 ## Run the model
-res <- bacon(side_lengths[, 1:20], angles[, 1:20], K = 10, weight = 0, 
-             estimate.s = TRUE, estimate.r = TRUE,
-             iter = 10000, burn = 5000)
+res <- bacon(side_lengths[, 1:20], 
+             angles[, 1:20], 
+             K = 10, 
+             weight_A = 1, 
+             weight_L = 1,
+             estimate.s = TRUE, 
+             estimate.r = TRUE,
+             iter = 10000, 
+             burn = 5000)
 
 ## Check convergence
 plot(rowSums(res$s_store == 0), type = "l", 
@@ -95,34 +99,8 @@ plot(rowSums(res$s_store == 0), type = "l",
 
 ## Check clustering accuracy
 mclust::adjustedRandIndex(res$cluster, angles[, 21]) 
-# ARI: 0.235 at 2000 iter and 1000 burn-in
-# ARI: 0.287 at 5000 iter and 2000 burn-in
-# ARI: 0.449 at 10000 iter and 2000 burn-in
-# ARI: 0.318~0.462 at 20000 iter and 2000 burn-in
-# ARI: 0.322 at 50000 iter and 2000 burn-in
 
-#### Run BACON on simulated 20-gon data with different cluster sizes. ####
-## Load required packages
-setwd("~/Documents/Repositories/BACON/code/clustering")
-source("bacon.R")
-
-## Load simulated shape data (143 20-gons with 10 clusters of varying size)
-setwd("~/Documents/Repositories/BACON/data/simulated/Data")
-load("decagons_different_cluster_sizes.Rdata")
-head(side_lengths)
-head(angles)
-
-## Run the model
-res <- bacon(side_lengths[, 1:20], angles[, 1:20], K = 10,
-             iter = 20000, burn = 2000)
-
-## Check convergence
-plot(rowSums(res$s_store == 0), type = "l", 
-     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
-
-## Check clustering accuracy
-mclust::adjustedRandIndex(res$cluster, angles[, 21]) 
-# ARI: 0.359 at 20000 iter and 2000 burn-in
+# ARI: 0.46 at 10000/5000 iter
 
 #### Run BACON on MPEG-7 data. ####
 ## Load required packages
@@ -139,7 +117,8 @@ head(angles)
 res <- bacon(side_lengths, 
              angles, 
              K = 20,
-             weight = 0, 
+             weight_L = 1,
+             weight_A = 1,
              estimate.s = FALSE, 
              estimate.r = FALSE,
              iter = 10000, 
