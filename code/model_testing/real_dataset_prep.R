@@ -1,4 +1,4 @@
-# Real-world dataset preparation for BACON
+# Real-world dataset preparation (polygonal chain extraction) for BACON
 # Author: Kevin Jin
 
 #### Load MPEG-7 data ####
@@ -163,8 +163,6 @@ autoplot(stats::prcomp(clr(side_lengths[, 1:50])),
 biplot(stats::prcomp(side_lengths[, 1:50]))
 plot(stats::prcomp(side_lengths[, 1:50], type = 'l'))
 
-
-#### Bijection from data to coordinates ####
 
 #### Create binary images from ADHD-200 chains ####
 # Unlist entire list of chains and put it in one list

@@ -1,0 +1,102 @@
+---
+title: "Testing BACON on Real Datasets"
+author: "Kevin Jin"
+date: "2023-05-16"
+output: html_document
+---
+
+# Run BACON on polygonal chains converted from MPEG-7.
+Step 0: Load required packages.
+```{r}
+#### Run BACON on MPEG-7 data. ####
+## Load required packages
+setwd("~/Documents/Repositories/BACON/code/clustering")
+source("bacon.R")
+```
+
+Step 1: Load MPEG-7 polygonal chains.
+```{r}
+## Load MPEG-7 data
+setwd("~/Documents/Repositories/BACON/data/real/MPEG-7")
+load("MPEG-7_k=20.Rdata")
+head(side_lengths)
+head(angles)
+```
+
+Step 2: Run the model.
+```{r}
+## Run the model
+res <- bacon(side_lengths, 
+             angles, 
+             K = 20,
+             weight_L = 1,
+             weight_A = 1,
+             estimate.s = FALSE, 
+             estimate.r = FALSE,
+             iter = 10000, 
+             burn = 5000)
+```
+
+Step 3: Check convergence and clustering accuracy.
+```{r}
+## Check convergence
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+
+## Check clustering accuracy
+mclust::adjustedRandIndex(res$cluster, phenotype)
+```
+
+# Run BACON on polygonal chains converted from Animals (Curated MPEG-7).
+
+# Run BACON on polygonal chains converted from ADHD-200.
+Step 0: Load required packages.
+```{r}
+#### Run BACON on ADHD-200 data. ####
+## Load required packages
+setwd("~/Documents/Repositories/BACON/code/clustering")
+source("bacon.R")
+```
+
+Step 1: Load ADHD-200 data.
+```{r}
+## Load ADHD-200 data (647 50-gons with 4 clusters)
+setwd("~/Documents/Repositories/BACON/data/real/adhd_200")
+load("ADHD-200_compositional.Rdata")
+head(side_lengths)
+head(angles)
+```
+
+Step 1a: Reduce ADHD-200 vertex number using BayesLASA (?)
+```{r}
+## Reduce number of vertices to speed up computation
+# Apply BayesLASA to reduce 50-gons to 10-gons - also for other datasets like MPEG-7 and ETH-80 (?)
+# What is the minimum number of vertices needed to describe any object in this dataset? It may vary.
+```
+
+Step 2: Run the model.
+```{r}
+## Run the model
+res <- bacon(side_lengths[, 1:50], 
+             angles[, 1:50], 
+             K = 4,
+             weight_L = 1,
+             weight_A = 1,
+             estimate.s = TRUE,
+             estimate.r = TRUE,
+             iter = 10000, 
+             burn = 5000) 
+```
+
+Step 3: Check convergence and clustering accuracy.
+```{r}
+## Check convergence
+plot(rowSums(res$s_store == 0), type = "l", 
+     ylab = "Number of samples with starting point as 0", xlab = "Iteration")
+
+## Check clustering accuracy
+mclust::adjustedRandIndex(res$cluster, phenotype)
+
+# ARI: 0.027; User runtime: 95 minutes
+# ARI: 0.022 at 10000/5000 iter; Elapsed runtime: 104 minutes
+```
