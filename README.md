@@ -116,12 +116,11 @@ mclust::adjustedRandIndex(res$cluster, ground_truth)
 ```
 
 ## Directory contents
-* `code/clustering/bacon.R` - Clustering function (source to call)
-* `code/clustering/BACONmcmc.cpp` - MCMC algorithm
-* `data/demo.RData` - Demo dataset
-* `code/clustering/example.R` - Shape clustering example
-* `code/data_simulation/shape_simulation.R` - Data simulation functions
-* `code/data_simulation/shape_simulation_example.R` - Data simulation example
+* `code/clustering/` - Code for shape clustering
+* `code/data_simulation/` - Code for simulating data for model testing
+* `code/model_testing/` - Code for model testing on data
+* `data/` - Simulated and real datasets
+* `figures/` - Figures from model testing
 
 ## Prerequisites
 * `Rcpp` - C++ implementation of the Markov chain Monte Carlo (MCMC) algorithm
@@ -137,5 +136,6 @@ clustering methods
 ## Collaborators
 * [Kevin Jin](https://kevinwjin.com/)
 * [Huimin Li](https://www.linkedin.com/in/huimin-li-19789248)
+* [Bryn Brakefield](https://github.com/brakefieb)
 * [Stephen McKeown](https://personal.utdallas.edu/~sxm190098/)
 * [Qiwei Li](https://sites.google.com/site/liqiwei2000/)
