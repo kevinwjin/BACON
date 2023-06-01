@@ -130,8 +130,7 @@ mclust::adjustedRandIndex(res$cluster, ground_truth)
 * `MCMCpack` - Required by `rdirichlet()` function
 * `mcclust` - MCMC clustering sample processing
 * `sf` - Spatial point detection for interior angle calculation
-* `mclust` - Implementation of Gaussian mixture model for comparison of
-clustering methods
+* `mclust` - Implementation of Gaussian mixture model for comparison of clustering methods
 
 ## Collaborators
 * [Kevin Jin](https://kevinwjin.com/)
