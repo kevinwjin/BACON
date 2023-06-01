@@ -381,7 +381,7 @@ compositional <- function(data, sum) {
 #' Reconstruct all possible closed unit polygonal chains given relative interior 
 #' angles and relative side lengths
 #' 
-#' @author Bryn Brakefield, Kevin Jin
+#' @author Bryn Brakefield, Qiwei Li, Kevin Jin
 #'
 #' @description
 #' Given two numerical vectors of compositional data containing relative 
